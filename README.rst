@@ -1,0 +1,59 @@
+****************************
+Mopidy-ALSAMixer
+****************************
+
+.. image:: https://img.shields.io/pypi/v/Mopidy-ALSAMixer.svg?style=flat
+    :target: https://pypi.python.org/pypi/Mopidy-ALSAMixer/
+    :alt: Latest PyPI version
+
+.. image:: https://img.shields.io/pypi/dm/Mopidy-ALSAMixer.svg?style=flat
+    :target: https://pypi.python.org/pypi/Mopidy-ALSAMixer/
+    :alt: Number of PyPI downloads
+
+.. image:: https://img.shields.io/travis/mopidy/mopidy-alsamixer/master.png?style=flat
+    :target: https://travis-ci.org/mopidy/mopidy-alsamixer
+    :alt: Travis CI build status
+
+.. image:: https://img.shields.io/coveralls/mopidy/mopidy-alsamixer/master.svg?style=flat
+   :target: https://coveralls.io/r/mopidy/mopidy-alsamixer?branch=master
+   :alt: Test coverage
+
+Mopidy extension for ALSA volume control
+
+
+Installation
+============
+
+Install by running::
+
+    pip install Mopidy-ALSAMixer
+
+Or, if available, install the Debian/Ubuntu package from `apt.mopidy.com
+<http://apt.mopidy.com/>`_.
+
+
+Configuration
+=============
+
+Before starting Mopidy, you must add configuration for
+Mopidy-ALSAMixer to your Mopidy configuration file::
+
+    [alsamixer]
+    # TODO: Add example of extension config
+
+
+Project resources
+=================
+
+- `Source code <https://github.com/mopidy/mopidy-alsamixer>`_
+- `Issue tracker <https://github.com/mopidy/mopidy-alsamixer/issues>`_
+- `Download development snapshot <https://github.com/mopidy/mopidy-alsamixer/archive/master.tar.gz#egg=Mopidy-ALSAMixer-dev>`_
+
+
+Changelog
+=========
+
+v0.1.0 (UNRELEASED)
+----------------------------------------
+
+- Initial release.
