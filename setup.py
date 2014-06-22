@@ -25,8 +25,9 @@ setup(
     include_package_data=True,
     install_requires=[
         'setuptools',
-        'Mopidy >= 0.20',
+        'Mopidy >= 0.18',  # TODO: Change to >= 0.20 before release
         'Pykka >= 1.1',
+        'pyalsaaudio',
     ],
     test_suite='nose.collector',
     tests_require=[
