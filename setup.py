@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
 
 import re
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 
 def get_version(filename):
@@ -24,7 +25,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'setuptools',
-        'Mopidy >= 0.18',
+        'Mopidy >= 0.20',
         'Pykka >= 1.1',
     ],
     test_suite='nose.collector',

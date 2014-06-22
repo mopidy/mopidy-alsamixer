@@ -1,6 +1,6 @@
-****************************
+****************
 Mopidy-ALSAMixer
-****************************
+****************
 
 .. image:: https://img.shields.io/pypi/v/Mopidy-ALSAMixer.svg?style=flat
     :target: https://pypi.python.org/pypi/Mopidy-ALSAMixer/
@@ -18,7 +18,16 @@ Mopidy-ALSAMixer
    :target: https://coveralls.io/r/mopidy/mopidy-alsamixer?branch=master
    :alt: Test coverage
 
-Mopidy extension for ALSA volume control
+`Mopidy <http://www.mopidy.com/>`_ extension for ALSA volume control.
+
+
+Dependencies
+============
+
+- A Linux system using ALSA for audio control.
+
+- ``pyalsaaudio``. Bindings for using the ALSA API from Python. The package is
+  available as ``python-alsaaudio`` in Debian/Ubuntu.
 
 
 Installation
@@ -35,11 +44,18 @@ Or, if available, install the Debian/Ubuntu package from `apt.mopidy.com
 Configuration
 =============
 
-Before starting Mopidy, you must add configuration for
-Mopidy-ALSAMixer to your Mopidy configuration file::
+The default configuration will probably work for most use cases.
+
+The following configuration values are available:
+
+- ``alsamixer/control``: Which ALSA control to use. Defaults to ``Master``.
+  Other typical values includes ``PCM``. Run the command ``amixer scontrols``
+  to list available controls on your system.
+
+Example ``alsamixer`` section from the Mopidy configuration file::
 
     [alsamixer]
-    # TODO: Add example of extension config
+    control = PCM
 
 
 Project resources
@@ -54,6 +70,6 @@ Changelog
 =========
 
 v0.1.0 (UNRELEASED)
-----------------------------------------
+-------------------
 
 - Initial release.

@@ -2,7 +2,9 @@ from __future__ import unicode_literals
 
 import unittest
 
-from mopidy_alsamixer import Extension, frontend as frontend_lib
+import mock
+
+from mopidy_alsamixer import Extension, mixer
 
 
 class ExtensionTest(unittest.TestCase):
@@ -14,14 +16,19 @@ class ExtensionTest(unittest.TestCase):
 
         self.assertIn('[alsamixer]', config)
         self.assertIn('enabled = true', config)
+        self.assertIn('control = Master', config)
 
     def test_get_config_schema(self):
         ext = Extension()
 
         schema = ext.get_config_schema()
 
-        # TODO Test the content of your config schema
-        #self.assertIn('username', schema)
-        #self.assertIn('password', schema)
+        self.assertIn('control', schema)
 
-    # TODO Write more tests
+    def test_setup(self):
+        ext = Extension()
+        registry = mock.Mock()
+
+        ext.setup(registry)
+
+        registry.add.assert_called_once_with('mixer', mixer.AlsaMixer)
