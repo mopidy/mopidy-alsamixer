@@ -13,11 +13,26 @@ from mopidy_alsamixer.mixer import AlsaMixer
 class MixerTest(unittest.TestCase):
 
     def setUp(self):
-        self.config = {}
+        self.config = {'alsamixer': {'control': 'Master'}}
         self.mixer = AlsaMixer(self.config)
 
     def test_has_config(self, alsa_mock):
         self.assertEqual(self.mixer.config, self.config)
+
+    def test_use_control_from_config(self, alsa_mock):
+        alsa_mock.mixers.return_value = ['Speaker']
+        self.config = {'alsamixer': {'control': 'Speaker'}}
+        self.mixer = AlsaMixer(self.config)
+
+        self.mixer.get_volume()
+
+        alsa_mock.Mixer.assert_called_once_with(control='Speaker')
+
+    def test_fails_if_control_is_unknown(self, alsa_mock):
+        self.config = {'alsamixer': {'control': 'Speaker'}}
+
+        with self.assertRaises(SystemExit):
+            self.mixer = AlsaMixer(self.config)
 
     def test_get_volume(self, alsa_mock):
         mixer_mock = alsa_mock.Mixer.return_value

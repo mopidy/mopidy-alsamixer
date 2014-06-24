@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import logging
+import sys
 
 import alsaaudio
 
@@ -17,13 +18,22 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def __init__(self, config):
         super(AlsaMixer, self).__init__()
         self.config = config
+        self.control = self.config['alsamixer']['control']
+
+        known_controls = alsaaudio.mixers()
+        if self.control not in known_controls:
+            logger.error(
+                'Could not find ALSA mixer control %s. '
+                'Known mixers include: %s',
+                self.control, ', '.join(known_controls))
+            sys.exit(1)
 
     @property
     def _mixer(self):
         # The mixer must be recreated every time it is used to be able to
         # observe volume/mute changes done by other applications.
         # TODO Use card, device, control from config
-        return alsaaudio.Mixer()
+        return alsaaudio.Mixer(control=self.control)
 
     def get_volume(self):
         channels = self._mixer.getvolume()
