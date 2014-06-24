@@ -18,7 +18,18 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def __init__(self, config):
         super(AlsaMixer, self).__init__()
         self.config = config
+        self.card = self.config['alsamixer']['card']
         self.control = self.config['alsamixer']['control']
+
+        known_cards = alsaaudio.cards()
+        if self.card >= len(known_cards):
+            logger.error(
+                'Could not find ALSA soundcard with index %d. '
+                'Known soundcards include: %s',
+                self.card, ', '.join(
+                    '%d (%s)' % (i, name)
+                    for i, name in enumerate(known_cards)))
+            sys.exit(1)
 
         known_controls = alsaaudio.mixers()
         if self.control not in known_controls:
@@ -33,7 +44,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         # The mixer must be recreated every time it is used to be able to
         # observe volume/mute changes done by other applications.
         # TODO Use card, device, control from config
-        return alsaaudio.Mixer(control=self.control)
+        return alsaaudio.Mixer(control=self.control, cardindex=self.card)
 
     def get_volume(self):
         channels = self._mixer.getvolume()

@@ -13,23 +13,43 @@ from mopidy_alsamixer.mixer import AlsaMixer
 class MixerTest(unittest.TestCase):
 
     def setUp(self):
-        self.config = {'alsamixer': {'control': 'Master'}}
+        self.config = {'alsamixer': {'card': 0, 'control': 'Master'}}
         self.mixer = AlsaMixer(self.config)
 
     def test_has_config(self, alsa_mock):
         self.assertEqual(self.mixer.config, self.config)
 
-    def test_use_control_from_config(self, alsa_mock):
-        alsa_mock.mixers.return_value = ['Speaker']
-        self.config = {'alsamixer': {'control': 'Speaker'}}
+    def test_use_card_from_config(self, alsa_mock):
+        alsa_mock.cards.return_value = ['PCH', 'SB']
+        alsa_mock.mixers.return_value = ['Master']
+        self.config = {'alsamixer': {'card': 1, 'control': 'Master'}}
         self.mixer = AlsaMixer(self.config)
 
         self.mixer.get_volume()
 
-        alsa_mock.Mixer.assert_called_once_with(control='Speaker')
+        alsa_mock.Mixer.assert_called_once_with(control='Master', cardindex=1)
+
+    def test_fails_if_card_is_unknown(self, alsa_mock):
+        alsa_mock.cards.return_value = ['PCH', 'SB']
+        alsa_mock.mixers.return_value = ['Master']
+        self.config = {'alsamixer': {'card': 2, 'control': 'Master'}}
+
+        with self.assertRaises(SystemExit):
+            self.mixer = AlsaMixer(self.config)
+
+    def test_use_control_from_config(self, alsa_mock):
+        alsa_mock.cards.return_value = ['PCH', 'SB']
+        alsa_mock.mixers.return_value = ['Speaker']
+        self.config = {'alsamixer': {'card': 0, 'control': 'Speaker'}}
+        self.mixer = AlsaMixer(self.config)
+
+        self.mixer.get_volume()
+
+        alsa_mock.Mixer.assert_called_once_with(control='Speaker', cardindex=0)
 
     def test_fails_if_control_is_unknown(self, alsa_mock):
-        self.config = {'alsamixer': {'control': 'Speaker'}}
+        alsa_mock.cards.return_value = ['PCH', 'SB']
+        self.config = {'alsamixer': {'card': 0, 'control': 'Speaker'}}
 
         with self.assertRaises(SystemExit):
             self.mixer = AlsaMixer(self.config)

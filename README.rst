@@ -24,7 +24,7 @@ Mopidy-ALSAMixer
 Dependencies
 ============
 
-- A Linux system using ALSA for audio control.
+- A Linux system using ALSA for audio playback.
 
 - ``pyalsaaudio``. Bindings for using the ALSA API from Python. The package is
   available as ``python-alsaaudio`` in Debian/Ubuntu.
@@ -48,6 +48,9 @@ The default configuration will probably work for most use cases.
 
 The following configuration values are available:
 
+- ``alsamixer/card``: Which soundcard to use, if you have more than one.
+  Numbered from 0 and up. 0 is the default.
+
 - ``alsamixer/control``: Which ALSA control to use. Defaults to ``Master``.
   Other typical values includes ``PCM``. Run the command ``amixer scontrols``
   to list available controls on your system.
@@ -55,6 +58,7 @@ The following configuration values are available:
 Example ``alsamixer`` section from the Mopidy configuration file::
 
     [alsamixer]
+    card = 1
     control = PCM
 
 
