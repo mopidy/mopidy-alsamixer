@@ -33,12 +33,12 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
                     for i, name in enumerate(known_cards)))
             sys.exit(1)
 
-        known_controls = alsaaudio.mixers()
+        known_controls = alsaaudio.mixers(self.card)
         if self.control not in known_controls:
             logger.error(
-                'Could not find ALSA mixer control %s. '
+                'Could not find ALSA mixer control %s on card %d. '
                 'Known mixers include: %s',
-                self.control, ', '.join(known_controls))
+                self.control, self.card, ', '.join(known_controls))
             sys.exit(1)
 
     @property
