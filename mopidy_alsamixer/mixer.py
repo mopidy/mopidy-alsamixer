@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
+    name = 'alsamixer'
+
     def __init__(self, config):
         super(AlsaMixer, self).__init__()
         self.config = config
