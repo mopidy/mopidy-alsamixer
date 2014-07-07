@@ -41,6 +41,10 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
                 self.control, self.card, ', '.join(known_controls))
             sys.exit(1)
 
+        logger.info(
+            'Mixing using ALSA, card %d, mixer control "%s".',
+            self.card, self.control)
+
     @property
     def _mixer(self):
         # The mixer must be recreated every time it is used to be able to
