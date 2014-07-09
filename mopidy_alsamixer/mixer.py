@@ -25,18 +25,24 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         known_cards = alsaaudio.cards()
         if self.card >= len(known_cards):
             raise exceptions.MixerError(
-                'Could not find ALSA soundcard with index %d. '
-                'Known soundcards include: %s' % (
-                    self.card, ', '.join(
+                'Could not find ALSA soundcard with index %(card)d. '
+                'Known soundcards include: %(known_cards)s' % {
+                    'card': self.card,
+                    'known_cards': ', '.join(
                         '%d (%s)' % (i, name)
-                        for i, name in enumerate(known_cards))))
+                        for i, name in enumerate(known_cards)),
+                })
 
         known_controls = alsaaudio.mixers(self.card)
         if self.control not in known_controls:
             raise exceptions.MixerError(
-                'Could not find ALSA mixer control %s on card %d. '
-                'Known mixers include: %s' % (
-                    self.control, self.card, ', '.join(known_controls)))
+                'Could not find ALSA mixer control %(control)s on '
+                'card %(card)d. Known mixers on card %(card)d include: '
+                '%(known_controls)s' % {
+                    'control': self.control,
+                    'card': self.card,
+                    'known_controls': ', '.join(known_controls),
+                })
 
         logger.info(
             'Mixing using ALSA, card %d, mixer control "%s".',
