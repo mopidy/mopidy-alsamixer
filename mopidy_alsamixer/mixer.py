@@ -1,11 +1,10 @@
 from __future__ import unicode_literals
 
 import logging
-import sys
 
 import alsaaudio
 
-from mopidy import mixer
+from mopidy import exceptions, mixer
 
 import pykka
 
@@ -25,21 +24,19 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
         known_cards = alsaaudio.cards()
         if self.card >= len(known_cards):
-            logger.error(
+            raise exceptions.MixerError(
                 'Could not find ALSA soundcard with index %d. '
-                'Known soundcards include: %s',
-                self.card, ', '.join(
-                    '%d (%s)' % (i, name)
-                    for i, name in enumerate(known_cards)))
-            sys.exit(1)
+                'Known soundcards include: %s' % (
+                    self.card, ', '.join(
+                        '%d (%s)' % (i, name)
+                        for i, name in enumerate(known_cards))))
 
         known_controls = alsaaudio.mixers(self.card)
         if self.control not in known_controls:
-            logger.error(
+            raise exceptions.MixerError(
                 'Could not find ALSA mixer control %s on card %d. '
-                'Known mixers include: %s',
-                self.control, self.card, ', '.join(known_controls))
-            sys.exit(1)
+                'Known mixers include: %s' % (
+                    self.control, self.card, ', '.join(known_controls)))
 
         logger.info(
             'Mixing using ALSA, card %d, mixer control "%s".',
