@@ -6,6 +6,8 @@ import alsaaudio
 
 import mock
 
+from mopidy import exceptions
+
 from mopidy_alsamixer.mixer import AlsaMixer
 
 
@@ -40,7 +42,7 @@ class MixerTest(unittest.TestCase):
         alsa_mock.mixers.return_value = ['Master']
         config = {'alsamixer': {'card': 2, 'control': 'Master'}}
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(exceptions.MixerError):
             self.get_mixer(config=config)
 
     def test_use_control_from_config(self, alsa_mock):
@@ -57,7 +59,7 @@ class MixerTest(unittest.TestCase):
         alsa_mock.cards.return_value = ['PCH', 'SB']
         config = {'alsamixer': {'card': 0, 'control': 'Speaker'}}
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(exceptions.MixerError):
             self.get_mixer(config=config)
 
     def test_get_volume(self, alsa_mock):
