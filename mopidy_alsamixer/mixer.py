@@ -52,7 +52,6 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def _mixer(self):
         # The mixer must be recreated every time it is used to be able to
         # observe volume/mute changes done by other applications.
-        # TODO Use card, device, control from config
         return alsaaudio.Mixer(control=self.control, cardindex=self.card)
 
     def get_volume(self):
