@@ -18,7 +18,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
     name = 'alsamixer'
 
-    def __init__(self, config, audio):
+    def __init__(self, config):
         super(AlsaMixer, self).__init__()
         self.config = config
         self.card = self.config['alsamixer']['card']
