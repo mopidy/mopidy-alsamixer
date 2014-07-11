@@ -48,6 +48,9 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             'Mixing using ALSA, card %d, mixer control "%s".',
             self.card, self.control)
 
+        self._last_volume = self.get_volume()
+        self._last_muted = self.get_mute()
+
     @property
     def _mixer(self):
         # The mixer must be recreated every time it is used to be able to
@@ -83,3 +86,13 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self._mixer.setmute(int(muted))
         self.trigger_mute_changed(muted)
         return True
+
+    def trigger_events_for_any_changes(self):
+        old_volume, self._last_volume = self._last_volume, self.get_volume()
+        old_muted, self._last_muted = self._last_muted, self.get_mute()
+
+        if old_volume != self._last_volume:
+            self.trigger_volume_changed(self._last_volume)
+
+        if old_muted != self._last_muted:
+            self.trigger_mute_changed(self._last_muted)

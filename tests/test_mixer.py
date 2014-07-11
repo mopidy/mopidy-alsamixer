@@ -32,6 +32,7 @@ class MixerTest(unittest.TestCase):
         alsa_mock.mixers.return_value = ['Master']
         config = {'alsamixer': {'card': 1, 'control': 'Master'}}
         mixer = self.get_mixer(config=config)
+        alsa_mock.reset_mock()
 
         mixer.get_volume()
 
@@ -50,6 +51,7 @@ class MixerTest(unittest.TestCase):
         alsa_mock.mixers.return_value = ['Speaker']
         config = {'alsamixer': {'card': 0, 'control': 'Speaker'}}
         mixer = self.get_mixer(config=config)
+        alsa_mock.reset_mock()
 
         mixer.get_volume()
 
@@ -66,6 +68,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = [86]
+        alsa_mock.reset_mock()
 
         self.assertEqual(mixer.get_volume(), 86)
 
@@ -75,6 +78,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = [86, 70]
+        alsa_mock.reset_mock()
 
         self.assertIsNone(mixer.get_volume())
 
@@ -84,6 +88,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = []
+        alsa_mock.reset_mock()
 
         self.assertIsNone(mixer.get_volume())
 
@@ -101,6 +106,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getmute.return_value = [1]
+        alsa_mock.reset_mock()
 
         self.assertIs(mixer.get_mute(), True)
 
@@ -110,6 +116,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getmute.return_value = [0]
+        alsa_mock.reset_mock()
 
         self.assertIs(mixer.get_mute(), False)
 
@@ -127,6 +134,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getmute.return_value = [0, 1]
+        alsa_mock.reset_mock()
 
         self.assertIs(mixer.get_mute(), None)
 
@@ -139,3 +147,35 @@ class MixerTest(unittest.TestCase):
         self.assertTrue(mixer.set_mute(False))
 
         mixer_mock.setmute.assert_called_once_with(0)
+
+    def test_trigger_events_for_any_changes_when_no_change(self, alsa_mock):
+        mixer_mock = alsa_mock.Mixer.return_value
+        mixer_mock.getvolume.return_value = [70]
+        mixer_mock.getmute.return_value = [0]
+        mixer = self.get_mixer(alsa_mock)
+        mixer.trigger_volume_changed = mock.Mock()
+        mixer.trigger_mute_changed = mock.Mock()
+        alsa_mock.reset_mock()
+
+        mixer.trigger_events_for_any_changes()
+
+        mixer_mock.getvolume.assert_called_once_with()
+        mixer_mock.getmute.assert_called_once_with()
+        self.assertEqual(mixer.trigger_volume_changed.call_count, 0)
+        self.assertEqual(mixer.trigger_mute_changed.call_count, 0)
+
+    def test_trigger_events_for_any_changes_when_changes(self, alsa_mock):
+        mixer_mock = alsa_mock.Mixer.return_value
+        mixer_mock.getvolume.side_effect = [[70], [75]]
+        mixer_mock.getmute.side_effect = [[0], [1]]
+        mixer = self.get_mixer(alsa_mock)
+        mixer.trigger_volume_changed = mock.Mock()
+        mixer.trigger_mute_changed = mock.Mock()
+        alsa_mock.reset_mock()
+
+        mixer.trigger_events_for_any_changes()
+
+        mixer_mock.getvolume.assert_called_once_with()
+        mixer_mock.getmute.assert_called_once_with()
+        mixer.trigger_volume_changed.assert_called_once_with(75)
+        mixer.trigger_mute_changed.assert_called_once_with(True)
