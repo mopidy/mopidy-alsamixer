@@ -77,7 +77,6 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
     def set_volume(self, volume):
         self._mixer.setvolume(volume)
-        self.trigger_volume_changed(volume)
         return True
 
     def get_mute(self):
@@ -92,7 +91,6 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
     def set_mute(self, muted):
         self._mixer.setmute(int(muted))
-        self.trigger_mute_changed(muted)
         return True
 
     def trigger_events_for_any_changes(self):
