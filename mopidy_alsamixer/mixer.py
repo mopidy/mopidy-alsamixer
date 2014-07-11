@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
 import logging
+import select
+import threading
 
 import alsaaudio
 
@@ -51,6 +53,12 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self._last_volume = self.get_volume()
         self._last_muted = self.get_mute()
 
+    def on_start(self):
+        self._observer = AlsaMixerObserver(
+            card=self.card, control=self.control,
+            callback=self.actor_ref.proxy().trigger_events_for_any_changes)
+        self._observer.start()
+
     @property
     def _mixer(self):
         # The mixer must be recreated every time it is used to be able to
@@ -96,3 +104,32 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
         if old_muted != self._last_muted:
             self.trigger_mute_changed(self._last_muted)
+
+
+class AlsaMixerObserver(threading.Thread):
+    daemon = True
+    name = 'AlsaMixerObserver'
+
+    def __init__(self, card, control, callback=None):
+        super(AlsaMixerObserver, self).__init__()
+        self.running = True
+
+        # Keep the mixer instance alive for the descriptors to work
+        self.mixer = alsaaudio.Mixer(cardindex=card, control=control)
+        descriptors = self.mixer.polldescriptors()
+        assert len(descriptors) == 1
+        self.fd = descriptors[0][0]
+        self.event_mask = descriptors[0][1]
+
+        self.callback = callback
+
+    def stop(self):
+        self.running = False
+
+    def run(self):
+        poller = select.epoll()
+        poller.register(self.fd, self.event_mask | select.EPOLLET)
+        while self.running:
+            events = poller.poll(timeout=1)
+            if events and self.callback is not None:
+                self.callback()
