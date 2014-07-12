@@ -86,8 +86,8 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             # Not all channels have the same mute state
             return None
 
-    def set_mute(self, muted):
-        self._mixer.setmute(int(muted))
+    def set_mute(self, mute):
+        self._mixer.setmute(int(mute))
         return True
 
 
