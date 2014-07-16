@@ -140,7 +140,7 @@ class MixerTest(unittest.TestCase):
 
         mixer_mock.setmute.assert_called_once_with(0)
 
-    def test_trigger_events_for_any_changes_when_no_change(self, alsa_mock):
+    def test_trigger_events_for_changed_values_when_no_change(self, alsa_mock):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = [70]
         mixer_mock.getmute.return_value = [0]
@@ -148,19 +148,19 @@ class MixerTest(unittest.TestCase):
         mixer.trigger_volume_changed = mock.Mock()
         mixer.trigger_mute_changed = mock.Mock()
 
-        mixer.trigger_events_for_any_changes()
+        mixer.trigger_events_for_changed_values()
         alsa_mock.reset_mock()
         mixer.trigger_volume_changed.reset_mock()
         mixer.trigger_mute_changed.reset_mock()
 
-        mixer.trigger_events_for_any_changes()
+        mixer.trigger_events_for_changed_values()
 
         mixer_mock.getvolume.assert_called_once_with()
         mixer_mock.getmute.assert_called_once_with()
         self.assertEqual(mixer.trigger_volume_changed.call_count, 0)
         self.assertEqual(mixer.trigger_mute_changed.call_count, 0)
 
-    def test_trigger_events_for_any_changes_when_changes(self, alsa_mock):
+    def test_trigger_events_for_changed_values_when_changes(self, alsa_mock):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = [75]
         mixer_mock.getmute.return_value = [1]
@@ -168,7 +168,7 @@ class MixerTest(unittest.TestCase):
         mixer.trigger_volume_changed = mock.Mock()
         mixer.trigger_mute_changed = mock.Mock()
 
-        mixer.trigger_events_for_any_changes()
+        mixer.trigger_events_for_changed_values()
 
         mixer_mock.getvolume.assert_called_once_with()
         mixer_mock.getmute.assert_called_once_with()
