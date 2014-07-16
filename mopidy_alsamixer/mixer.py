@@ -46,6 +46,9 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
                     'known_controls': ', '.join(known_controls),
                 })
 
+        self._last_volume = None
+        self._last_mute = None
+
         logger.info(
             'Mixing using ALSA, card %d, mixer control "%s".',
             self.card, self.control)
@@ -91,11 +94,6 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         return True
 
     def trigger_events_for_changed_values(self):
-        if not hasattr(self, '_last_volume'):
-            self._last_volume = None
-        if not hasattr(self, '_last_mute'):
-            self._last_mute = None
-
         old_volume, self._last_volume = self._last_volume, self.get_volume()
         old_mute, self._last_mute = self._last_mute, self.get_mute()
 
