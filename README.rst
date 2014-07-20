@@ -73,7 +73,7 @@ Project resources
 Changelog
 =========
 
-v0.1.0 (UNRELEASED)
+v1.0.0 (2014-07-21)
 -------------------
 
 - Initial release.
