@@ -73,6 +73,11 @@ Project resources
 Changelog
 =========
 
+v1.0.1 (2014-07-21)
+-------------------
+
+- Correctly require Mopidy 0.19 instead of 0.18.
+
 v1.0.0 (2014-07-21)
 -------------------
 

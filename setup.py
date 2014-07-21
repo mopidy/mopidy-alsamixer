@@ -25,7 +25,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'setuptools',
-        'Mopidy >= 0.18',  # TODO: Change to >= 0.20 before release
+        'Mopidy >= 0.19',
         'Pykka >= 1.1',
         'pyalsaaudio',
     ],
