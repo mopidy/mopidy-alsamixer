@@ -115,11 +115,31 @@ class MixerTest(unittest.TestCase):
 
         mixer_mock.getmute.assert_called_once_with()
 
+    def test_get_mute_when_unsupported(self, alsa_mock):
+        alsa_mock.ALSAAudioError = alsaaudio.ALSAAudioError
+        mixer = self.get_mixer(alsa_mock)
+        mixer_mock = alsa_mock.Mixer.return_value
+        mixer_mock.getmute.side_effect = alsa_mock.ALSAAudioError
+
+        self.assertIsNone(mixer.get_mute())
+
+        mixer_mock.getmute.assert_called_once_with()
+
     def test_set_mute_to_muted(self, alsa_mock):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
 
         self.assertTrue(mixer.set_mute(True))
+
+        mixer_mock.setmute.assert_called_once_with(1)
+
+    def test_set_mute_when_unsupported(self, alsa_mock):
+        alsa_mock.ALSAAudioError = alsaaudio.ALSAAudioError
+        mixer = self.get_mixer(alsa_mock)
+        mixer_mock = alsa_mock.Mixer.return_value
+        mixer_mock.setmute.side_effect = alsa_mock.ALSAAudioError
+
+        self.assertFalse(mixer.set_mute(True))
 
         mixer_mock.setmute.assert_called_once_with(1)
 

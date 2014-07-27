@@ -80,7 +80,11 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         return True
 
     def get_mute(self):
-        channels_muted = self._mixer.getmute()
+        try:
+            channels_muted = self._mixer.getmute()
+        except alsaaudio.ALSAAudioError as exc:
+            logger.debug('Getting mute state failed: %s', exc)
+            return None
         if all(channels_muted):
             return True
         elif not any(channels_muted):
@@ -90,8 +94,12 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             return None
 
     def set_mute(self, mute):
-        self._mixer.setmute(int(mute))
-        return True
+        try:
+            self._mixer.setmute(int(mute))
+            return True
+        except alsaaudio.ALSAAudioError as exc:
+            logger.debug('Setting mute state failed: %s', exc)
+            return False
 
     def trigger_events_for_changed_values(self):
         old_volume, self._last_volume = self._last_volume, self.get_volume()
