@@ -73,7 +73,7 @@ Project resources
 Changelog
 =========
 
-v1.0.2 (UNRELEASED)
+v1.0.2 (2014-07-27)
 -------------------
 
 - Handle mixer controls which does not support muting. (Fixes: #1)
