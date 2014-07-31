@@ -136,6 +136,11 @@ class AlsaMixerObserver(threading.Thread):
         poller = select.epoll()
         poller.register(self.fd, self.event_mask | select.EPOLLET)
         while self.running:
-            events = poller.poll(timeout=1)
-            if events and self.callback is not None:
-                self.callback()
+            try:
+                events = poller.poll(timeout=1)
+                if events and self.callback is not None:
+                    self.callback()
+            except IOError as exc:
+                # poller.poll() will raise an IOError because of the
+                # interrupted system call when suspending the machine.
+                logger.debug('Ignored IO error: %s', exc)
