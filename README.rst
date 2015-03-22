@@ -10,7 +10,7 @@ Mopidy-ALSAMixer
     :target: https://pypi.python.org/pypi/Mopidy-ALSAMixer/
     :alt: Number of PyPI downloads
 
-.. image:: https://img.shields.io/travis/mopidy/mopidy-alsamixer/master.png?style=flat
+.. image:: https://img.shields.io/travis/mopidy/mopidy-alsamixer/master.svg?style=flat
     :target: https://travis-ci.org/mopidy/mopidy-alsamixer
     :alt: Travis CI build status
 
