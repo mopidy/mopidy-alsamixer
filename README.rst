@@ -67,7 +67,6 @@ Project resources
 
 - `Source code <https://github.com/mopidy/mopidy-alsamixer>`_
 - `Issue tracker <https://github.com/mopidy/mopidy-alsamixer/issues>`_
-- `Download development snapshot <https://github.com/mopidy/mopidy-alsamixer/archive/master.tar.gz#egg=Mopidy-ALSAMixer-dev>`_
 
 
 Changelog
