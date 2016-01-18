@@ -69,6 +69,14 @@ Project resources
 - `Issue tracker <https://github.com/mopidy/mopidy-alsamixer/issues>`_
 
 
+Credits
+=======
+
+- Original author: `Stein Magnus Jodal <https://github.com/jodal>`__
+- Current maintainer: `Stein Magnus Jodal <https://github.com/jodal>`__
+- `Contributors <https://github.com/mopidy/mopidy-alsamixer/graphs/contributors>`_
+
+
 Changelog
 =========
 
