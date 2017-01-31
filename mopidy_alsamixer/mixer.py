@@ -23,6 +23,8 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self.config = config
         self.card = self.config['alsamixer']['card']
         self.control = self.config['alsamixer']['control']
+        self.volmin = self.config['alsamixer']['volmin']
+        self.volmax = self.config['alsamixer']['volmax']
 
         known_cards = alsaaudio.cards()
         if self.card >= len(known_cards):
@@ -70,13 +72,15 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         if not channels:
             return None
         elif channels.count(channels[0]) == len(channels):
-            return int(channels[0])
+            unadjusted_volume = (channels[0] - self.volmin) * 100.0 / (self.volmax - self.volmin)
+            return int(unadjusted_volume)
         else:
             # Not all channels have the same volume
             return None
 
     def set_volume(self, volume):
-        self._mixer.setvolume(volume)
+        adjusted_volume = self.volmin + volume * (self.volmax - self.volmin) / 100.0
+        self._mixer.setvolume(int(adjusted_volume))
         return True
 
     def get_mute(self):

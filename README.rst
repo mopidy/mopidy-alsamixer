@@ -51,11 +51,19 @@ The following configuration values are available:
   Other typical values includes ``PCM``. Run the command ``amixer scontrols``
   to list available controls on your system.
 
+- ``alsamixer/volmin`` and ``alsamixer/volmax``: Map the Mopidy volume control range to
+  a different range. Values are in the range 0-100. Use this if the default range (0 - 100)
+  is too wide, resulting in a small usable range for Mopidy's volume control.
+  For example try ``volmin = 30`` and ``volmin = 70`` to map Mopidy's volume control to the middle
+  of ALSA's volume range.
+
 Example ``alsamixer`` section from the Mopidy configuration file::
 
     [alsamixer]
     card = 1
     control = PCM
+    volmin = 0
+    volmin = 100
 
 
 Project resources
