@@ -57,6 +57,9 @@ The following configuration values are available:
   For example try ``volmin = 30`` and ``volmin = 70`` to map Mopidy's volume control to the middle
   of ALSA's volume range.
 
+- ``alsamixer/logarithmic_volume``: Use a logarithmic volume scale. This is recommended with the current
+  version of pyalsaaudio, which provides a linear volume scale, whereas volume should be logarithmic.
+
 Example ``alsamixer`` section from the Mopidy configuration file::
 
     [alsamixer]
@@ -64,7 +67,7 @@ Example ``alsamixer`` section from the Mopidy configuration file::
     control = PCM
     volmin = 0
     volmin = 100
-
+    logarithmic_volume = false
 
 Project resources
 =================
