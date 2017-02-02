@@ -88,7 +88,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         volume = mixer_volume
         if self.volume_scale == "cubic":
             volume = GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.CUBIC, GstAudio.StreamVolumeFormat.LINEAR, volume / 100.0) * 100.0
-        elif self.volume_scale == "db":
+        elif self.volume_scale == "log":
             # Uses our own formula rather than GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.LINEAR, GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
             # as the result is a DB value, which we can't work with as self._mixer provides a percentage.
             volume = math.pow(10, volume / 50.0)
@@ -99,7 +99,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         mixer_volume = self.min_volume + volume * (self.max_volume - self.min_volume) / 100.0
         if self.volume_scale == "cubic":
             mixer_volume = GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.LINEAR, GstAudio.StreamVolumeFormat.CUBIC, mixer_volume / 100.0) * 100.0
-        elif self.volume_scale == "db":
+        elif self.volume_scale == "log":
             # Uses our own formula rather than GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.LINEAR, GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
             # as the result is a DB value, which we can't work with as self._mixer wants a percentage.
             mixer_volume = 50 * math.log10(mixer_volume)
