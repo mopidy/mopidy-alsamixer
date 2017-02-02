@@ -24,8 +24,8 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self.config = config
         self.card = self.config['alsamixer']['card']
         self.control = self.config['alsamixer']['control']
-        self.volmin = self.config['alsamixer']['volmin']
-        self.volmax = self.config['alsamixer']['volmax']
+        self.min_volume = self.config['alsamixer']['min_volume']
+        self.max_volume = self.config['alsamixer']['max_volume']
         self.logarithmic_volume = self.config['alsamixer']['logarithmic_volume']
 
         known_cards = alsaaudio.cards()
@@ -77,14 +77,14 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             unadjusted_volume = channels[0]
             if self.logarithmic_volume:
                 unadjusted_volume = 100.0 * math.pow(unadjusted_volume / 100.0, 3.0)
-            unadjusted_volume = (unadjusted_volume - self.volmin) * 100.0 / (self.volmax - self.volmin)
+            unadjusted_volume = (unadjusted_volume - self.min_volume) * 100.0 / (self.max_volume - self.min_volume)
             return int(unadjusted_volume)
         else:
             # Not all channels have the same volume
             return None
 
     def set_volume(self, volume):
-        adjusted_volume = self.volmin + volume * (self.volmax - self.volmin) / 100.0
+        adjusted_volume = self.min_volume + volume * (self.max_volume - self.min_volume) / 100.0
         if self.logarithmic_volume:
             adjusted_volume = 100.0 * math.pow(adjusted_volume / 100.0, 1.0 / 3.0)
         self._mixer.setvolume(int(adjusted_volume))

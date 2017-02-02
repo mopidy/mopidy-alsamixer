@@ -22,8 +22,8 @@ class Extension(ext.Extension):
         schema = super(Extension, self).get_config_schema()
         schema['card'] = config.Integer(minimum=0)
         schema['control'] = config.String()
-        schema['volmin'] = config.Integer(minimum=0, maximum=100)
-        schema['volmax'] = config.Integer(minimum=0, maximum=100)
+        schema['min_volume'] = config.Integer(minimum=0, maximum=100)
+        schema['max_volume'] = config.Integer(minimum=0, maximum=100)
         schema['logarithmic_volume'] = config.Boolean()
         return schema
 
