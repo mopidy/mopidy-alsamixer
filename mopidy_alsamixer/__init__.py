@@ -24,7 +24,8 @@ class Extension(ext.Extension):
         schema['control'] = config.String()
         schema['min_volume'] = config.Integer(minimum=0, maximum=100)
         schema['max_volume'] = config.Integer(minimum=0, maximum=100)
-        schema['volume_scale'] = config.String(choices=('linear', 'cubic', 'log'))
+        schema['volume_scale'] = config.String(
+            choices=('linear', 'cubic', 'log'))
         return schema
 
     def setup(self, registry):
