@@ -6,6 +6,7 @@ import threading
 import math
 
 import alsaaudio
+from gi.repository import GstAudio
 
 from mopidy import exceptions, mixer
 
@@ -86,14 +87,14 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def mixer_volume_to_volume(self, mixer_volume):
         volume = mixer_volume
         if self.volume_scale == "cubic":
-            volume = 100.0 * math.pow(volume / 100.0, 3.0)
+            volume = GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.CUBIC, GstAudio.StreamVolumeFormat.LINEAR, volume / 100.0) * 100.0
         volume = (volume - self.min_volume) * 100.0 / (self.max_volume - self.min_volume)
         return int(volume)
 
     def volume_to_mixer_volume(self, volume):
         mixer_volume = self.min_volume + volume * (self.max_volume - self.min_volume) / 100.0
         if self.volume_scale == "cubic":
-            mixer_volume = 100.0 * math.pow(mixer_volume / 100.0, 1.0 / 3.0)
+            mixer_volume = GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.LINEAR, GstAudio.StreamVolumeFormat.CUBIC, mixer_volume / 100.0) * 100.0
         return int(mixer_volume)
 
     def get_mute(self):
