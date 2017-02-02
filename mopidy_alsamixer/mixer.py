@@ -74,21 +74,27 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         if not channels:
             return None
         elif channels.count(channels[0]) == len(channels):
-            unadjusted_volume = channels[0]
-            if self.volume_scale == "cubic":
-                unadjusted_volume = 100.0 * math.pow(unadjusted_volume / 100.0, 3.0)
-            unadjusted_volume = (unadjusted_volume - self.min_volume) * 100.0 / (self.max_volume - self.min_volume)
-            return int(unadjusted_volume)
+            return self.mixer_volume_to_volume(channels[0])
         else:
             # Not all channels have the same volume
             return None
 
     def set_volume(self, volume):
-        adjusted_volume = self.min_volume + volume * (self.max_volume - self.min_volume) / 100.0
-        if self.volume_scale == "cubic":
-            adjusted_volume = 100.0 * math.pow(adjusted_volume / 100.0, 1.0 / 3.0)
-        self._mixer.setvolume(int(adjusted_volume))
+        self._mixer.setvolume(self.volume_to_mixer_volume(volume))
         return True
+
+    def mixer_volume_to_volume(self, mixer_volume):
+        volume = mixer_volume
+        if self.volume_scale == "cubic":
+            volume = 100.0 * math.pow(volume / 100.0, 3.0)
+        volume = (volume - self.min_volume) * 100.0 / (self.max_volume - self.min_volume)
+        return int(volume)
+
+    def volume_to_mixer_volume(self, volume):
+        mixer_volume = self.min_volume + volume * (self.max_volume - self.min_volume) / 100.0
+        if self.volume_scale == "cubic":
+            mixer_volume = 100.0 * math.pow(mixer_volume / 100.0, 1.0 / 3.0)
+        return int(mixer_volume)
 
     def get_mute(self):
         try:
