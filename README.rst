@@ -57,7 +57,7 @@ The following configuration values are available:
   For example try ``min_volume = 30`` and ``max_volume = 70`` to map Mopidy's volume control to the middle
   of ALSA's volume range.
 
-- ``alsamixer/volume_scale``: Either 'linear' or 'cubic'. The cubic scale is recommended as it produces
+- ``alsamixer/volume_scale``: Either 'linear', 'cubic' or 'db'. The cubic scale is recommended as it produces
   better results to the ear, and matches the volume scale in alsamixer. The default is the linear scale.
 
 Example ``alsamixer`` section from the Mopidy configuration file::

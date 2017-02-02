@@ -88,6 +88,9 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         volume = mixer_volume
         if self.volume_scale == "cubic":
             volume = GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.CUBIC, GstAudio.StreamVolumeFormat.LINEAR, volume / 100.0) * 100.0
+        elif self.volume_scale == "db":
+            volume = math.pow(10, volume / 50.0)
+            #volume = GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.DB, GstAudio.StreamVolumeFormat.LINEAR, volume / 100.0) * 100.0
         volume = (volume - self.min_volume) * 100.0 / (self.max_volume - self.min_volume)
         return int(volume)
 
@@ -95,6 +98,9 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         mixer_volume = self.min_volume + volume * (self.max_volume - self.min_volume) / 100.0
         if self.volume_scale == "cubic":
             mixer_volume = GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.LINEAR, GstAudio.StreamVolumeFormat.CUBIC, mixer_volume / 100.0) * 100.0
+        elif self.volume_scale == "db":
+            mixer_volume = 50 * math.log10(mixer_volume)
+            #mixer_volume = GstAudio.StreamVolume.convert_volume(GstAudio.StreamVolumeFormat.LINEAR, GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
         return int(mixer_volume)
 
     def get_mute(self):
