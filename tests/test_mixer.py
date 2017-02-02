@@ -20,7 +20,11 @@ class MixerTest(unittest.TestCase):
         if alsa_mock is not None:
             alsa_mock.cards.return_value = ['PCH']
             alsa_mock.mixers.return_value = ['Master']
-        return AlsaMixer(config=config)
+        actual_config = {'alsamixer': {'card': 0, 'control': 'Master',
+                         'min_volume': 0, 'max_volume': 100,
+                         'volume_scale': 'cubic'}}
+        actual_config.update(config)
+        return AlsaMixer(config=actual_config)
 
     def test_has_config(self, alsa_mock):
         config = {'alsamixer': {'card': 0, 'control': 'Master'}}
