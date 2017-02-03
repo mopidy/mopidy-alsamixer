@@ -19,7 +19,8 @@ class MixerTest(unittest.TestCase):
                        'min_volume': 0, 'max_volume': 100,
                        'volume_scale': 'cubic'}}
 
-    def get_mixer(self, alsa_mock=None, config=None, apply_default_config=True):
+    def get_mixer(self, alsa_mock=None, config=None,
+                  apply_default_config=True):
         if config is None:
             config = {'alsamixer': {'card': 0, 'control': 'Master'}}
         if alsa_mock is not None:
@@ -37,7 +38,8 @@ class MixerTest(unittest.TestCase):
         actual_config = MixerTest.default_config.copy()
         actual_config['alsamixer'].update(config['alsamixer'])
 
-        mixer = self.get_mixer(alsa_mock, config=actual_config, apply_default_config=False)
+        mixer = self.get_mixer(alsa_mock, config=actual_config,
+                               apply_default_config=False)
         self.assertIs(mixer.config, actual_config)
 
     def test_use_card_from_config(self, alsa_mock):
