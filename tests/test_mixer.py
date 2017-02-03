@@ -97,6 +97,16 @@ class MixerTest(unittest.TestCase):
 
         mixer_mock.getvolume.assert_called_once_with()
 
+    def test_get_volume_log(self, alsa_mock):
+        config = {'alsamixer': {'volume_scale': 'log'}}
+        mixer = self.get_mixer(alsa_mock, config=config)
+        mixer_mock = alsa_mock.Mixer.return_value
+        mixer_mock.getvolume.return_value = [86]
+
+        self.assertEqual(mixer.get_volume(), 52)
+
+        mixer_mock.getvolume.assert_called_once_with()
+
     def test_get_volume_when_channels_are_different(self, alsa_mock):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
@@ -132,6 +142,15 @@ class MixerTest(unittest.TestCase):
         self.assertTrue(mixer.set_volume(74))
 
         mixer_mock.setvolume.assert_called_once_with(90)
+
+    def test_set_volume_log(self, alsa_mock):
+        config = {'alsamixer': {'volume_scale': 'log'}}
+        mixer = self.get_mixer(alsa_mock, config=config)
+        mixer_mock = alsa_mock.Mixer.return_value
+
+        self.assertTrue(mixer.set_volume(74))
+
+        mixer_mock.setvolume.assert_called_once_with(93)
 
     def test_get_mute_when_muted(self, alsa_mock):
         mixer = self.get_mixer(alsa_mock)
