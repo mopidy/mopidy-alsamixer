@@ -51,12 +51,23 @@ The following configuration values are available:
   Other typical values includes ``PCM``. Run the command ``amixer scontrols``
   to list available controls on your system.
 
+- ``alsamixer/min_volume`` and ``alsamixer/max_volume``: Map the Mopidy volume control range to
+  a different range. Values are in the range 0-100. Use this if the default range (0 - 100)
+  is too wide, resulting in a small usable range for Mopidy's volume control.
+  For example try ``min_volume = 30`` and ``max_volume = 70`` to map Mopidy's volume control to the middle
+  of ALSA's volume range.
+
+- ``alsamixer/volume_scale``: Either 'linear', 'cubic' or 'log'. The cubic scale is the default as it produces
+  better results to the ear, and matches the volume scale in alsamixer.
+
 Example ``alsamixer`` section from the Mopidy configuration file::
 
     [alsamixer]
     card = 1
     control = PCM
-
+    min_volume = 0
+    max_volume = 100
+    volume_scale = cubic
 
 Project resources
 =================
