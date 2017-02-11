@@ -51,14 +51,16 @@ The following configuration values are available:
   Other typical values includes ``PCM``. Run the command ``amixer scontrols``
   to list available controls on your system.
 
-- ``alsamixer/min_volume`` and ``alsamixer/max_volume``: Map the Mopidy volume control range to
-  a different range. Values are in the range 0-100. Use this if the default range (0 - 100)
-  is too wide, resulting in a small usable range for Mopidy's volume control.
-  For example try ``min_volume = 30`` and ``max_volume = 70`` to map Mopidy's volume control to the middle
-  of ALSA's volume range.
+- ``alsamixer/min_volume`` and ``alsamixer/max_volume``: Map the Mopidy volume
+  control range to a different range. Values are in the range 0-100. Use this
+  if the default range (0-100) is too wide, resulting in a small usable range
+  for Mopidy's volume control. For example try ``min_volume = 30`` and
+  ``max_volume = 70`` to map Mopidy's volume control to the middle of ALSA's
+  volume range.
 
-- ``alsamixer/volume_scale``: Either 'linear', 'cubic' or 'log'. The cubic scale is the default as it produces
-  better results to the ear, and matches the volume scale in alsamixer.
+- ``alsamixer/volume_scale``: Either ``linear``, ``cubic``, or ``log``. The
+  cubic scale is the default as it is closer to how the human ear percieves
+  volume, and matches the volume scale used in the ``alsamixer`` program.
 
 Example ``alsamixer`` section from the Mopidy configuration file::
 
@@ -86,6 +88,18 @@ Credits
 
 Changelog
 =========
+
+v1.1.0 (UNRELEASED)
+-------------------
+
+- Add ``alsamixer/min_volume`` and ``alsamixer/max_volume`` config values to
+  make Mopidy-ALSAMixer's volume scale only use a part of the underlying ALSA
+  volume scale. (PR: #9)
+
+- Add ``alsamixer/volume_scale`` to allow switching between ``linear``,
+  ``cubic``, and ``log`` scales. The default value has been changed from
+  ``linear`` to ``cubic``, which is closer to how the human ear percieve the
+  volume. (Fixes: #3, PR: #9)
 
 v1.0.3 (2014-07-31)
 -------------------
