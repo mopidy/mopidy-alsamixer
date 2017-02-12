@@ -24,7 +24,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def __init__(self, config):
         super(AlsaMixer, self).__init__()
         self.config = config
-        self.card = self.config['alsamixer']['card']
+        self.cardindex = self.config['alsamixer']['card']
         self.control = self.config['alsamixer']['control']
         self.min_volume = self.config['alsamixer']['min_volume']
         self.max_volume = self.config['alsamixer']['max_volume']
@@ -32,22 +32,23 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
         known_cards = alsaaudio.cards()
         try:
-            known_controls = alsaaudio.mixers(self.card)
+            known_controls = alsaaudio.mixers(self.cardindex)
         except alsaaudio.ALSAAudioError:
             raise exceptions.MixerError(
-                'Could not find ALSA soundcard with index %(card)d. '
+                'Could not find ALSA soundcard with index %(cardindex)d. '
                 'Known soundcards include: %(known_cards)s' % {
-                    'card': self.card,
+                    'cardindex': self.cardindex,
                     'known_cards': ', '.join(known_cards),
                 })
 
         if self.control not in known_controls:
             raise exceptions.MixerError(
                 'Could not find ALSA mixer control %(control)s on '
-                'card %(card)d. Known mixers on card %(card)d include: '
+                'card %(cardindex)d. '
+                'Known mixers on card %(cardindex)d include: '
                 '%(known_controls)s' % {
                     'control': self.control,
-                    'card': self.card,
+                    'cardindex': self.cardindex,
                     'known_controls': ', '.join(known_controls),
                 })
 
@@ -56,11 +57,11 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
         logger.info(
             'Mixing using ALSA, card %d, mixer control "%s".',
-            self.card, self.control)
+            self.cardindex, self.control)
 
     def on_start(self):
         self._observer = AlsaMixerObserver(
-            card=self.card, control=self.control,
+            cardindex=self.cardindex, control=self.control,
             callback=self.actor_ref.proxy().trigger_events_for_changed_values)
         self._observer.start()
 
@@ -68,7 +69,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def _mixer(self):
         # The mixer must be recreated every time it is used to be able to
         # observe volume/mute changes done by other applications.
-        return alsaaudio.Mixer(control=self.control, cardindex=self.card)
+        return alsaaudio.Mixer(control=self.control, cardindex=self.cardindex)
 
     def get_volume(self):
         channels = self._mixer.getvolume()
@@ -156,12 +157,12 @@ class AlsaMixerObserver(threading.Thread):
     daemon = True
     name = 'AlsaMixerObserver'
 
-    def __init__(self, card, control, callback=None):
+    def __init__(self, cardindex, control, callback=None):
         super(AlsaMixerObserver, self).__init__()
         self.running = True
 
         # Keep the mixer instance alive for the descriptors to work
-        self.mixer = alsaaudio.Mixer(cardindex=card, control=control)
+        self.mixer = alsaaudio.Mixer(cardindex=cardindex, control=control)
         descriptors = self.mixer.polldescriptors()
         assert len(descriptors) == 1
         self.fd = descriptors[0][0]
