@@ -89,7 +89,7 @@ Credits
 Changelog
 =========
 
-v1.1.0 (UNRELEASED)
+v1.1.0 (2017-02-12)
 -------------------
 
 - Add ``alsamixer/min_volume`` and ``alsamixer/max_volume`` config values to
