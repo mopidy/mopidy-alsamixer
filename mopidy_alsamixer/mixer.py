@@ -31,17 +31,16 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self.volume_scale = self.config['alsamixer']['volume_scale']
 
         known_cards = alsaaudio.cards()
-        if self.card >= len(known_cards):
+        try:
+            known_controls = alsaaudio.mixers(self.card)
+        except alsaaudio.ALSAAudioError:
             raise exceptions.MixerError(
                 'Could not find ALSA soundcard with index %(card)d. '
                 'Known soundcards include: %(known_cards)s' % {
                     'card': self.card,
-                    'known_cards': ', '.join(
-                        '%d (%s)' % (i, name)
-                        for i, name in enumerate(known_cards)),
+                    'known_cards': ', '.join(known_cards),
                 })
 
-        known_controls = alsaaudio.mixers(self.card)
         if self.control not in known_controls:
             raise exceptions.MixerError(
                 'Could not find ALSA mixer control %(control)s on '

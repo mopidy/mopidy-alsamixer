@@ -89,6 +89,14 @@ Credits
 Changelog
 =========
 
+v1.1.1 (UNRELEASED)
+-------------------
+
+- Don't rely on all cards which use a hardware card index to be included in the
+  list returned by ``alsaaudio.cards()``. This can happen if an audio card is
+  disabled, but still use up a "card index", for example when disabling the
+  builtin audio card on a Raspberry Pi. (Fixes: #8)
+
 v1.1.0 (2017-02-12)
 -------------------
 

@@ -46,19 +46,33 @@ class MixerTest(unittest.TestCase):
         alsa_mock.cards.return_value = ['PCH', 'SB']
         alsa_mock.mixers.return_value = ['Master']
         config = {'alsamixer': {'card': 1, 'control': 'Master'}}
-        mixer = self.get_mixer(config=config)
 
+        mixer = self.get_mixer(config=config)
         mixer.get_volume()
 
         alsa_mock.Mixer.assert_called_once_with(control='Master', cardindex=1)
 
-    def test_fails_if_card_is_unknown(self, alsa_mock):
+    def test_use_card_with_index_not_in_cards_list(self, alsa_mock):
         alsa_mock.cards.return_value = ['PCH', 'SB']
         alsa_mock.mixers.return_value = ['Master']
         config = {'alsamixer': {'card': 2, 'control': 'Master'}}
 
+        mixer = self.get_mixer(config=config)
+        mixer.get_volume()
+
+        alsa_mock.mixers.assert_called_once_with(2)
+        alsa_mock.Mixer.assert_called_once_with(control='Master', cardindex=2)
+
+    def test_fails_if_card_is_unknown(self, alsa_mock):
+        alsa_mock.cards.return_value = ['PCH', 'SB']
+        alsa_mock.mixers.side_effect = alsa_mock.ALSAAudioError(
+            'No such file or directory [hw:2]')
+        config = {'alsamixer': {'card': 2, 'control': 'Master'}}
+
         with self.assertRaises(exceptions.MixerError):
             self.get_mixer(config=config)
+
+        alsa_mock.mixers.assert_called_once_with(2)
 
     def test_use_control_from_config(self, alsa_mock):
         alsa_mock.cards.return_value = ['PCH', 'SB']
