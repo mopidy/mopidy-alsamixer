@@ -50,7 +50,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(config=config)
         mixer.get_volume()
 
-        alsa_mock.Mixer.assert_called_once_with(control='Master', cardindex=1)
+        alsa_mock.Mixer.assert_called_once_with(cardindex=1, control='Master')
 
     def test_use_card_with_index_not_in_cards_list(self, alsa_mock):
         alsa_mock.cards.return_value = ['PCH', 'SB']
@@ -61,7 +61,7 @@ class MixerTest(unittest.TestCase):
         mixer.get_volume()
 
         alsa_mock.mixers.assert_called_once_with(2)
-        alsa_mock.Mixer.assert_called_once_with(control='Master', cardindex=2)
+        alsa_mock.Mixer.assert_called_once_with(cardindex=2, control='Master')
 
     def test_fails_if_card_is_unknown(self, alsa_mock):
         alsa_mock.cards.return_value = ['PCH', 'SB']
@@ -82,7 +82,7 @@ class MixerTest(unittest.TestCase):
 
         mixer.get_volume()
 
-        alsa_mock.Mixer.assert_called_once_with(control='Speaker', cardindex=0)
+        alsa_mock.Mixer.assert_called_once_with(cardindex=0, control='Speaker')
 
     def test_fails_if_control_is_unknown(self, alsa_mock):
         alsa_mock.cards.return_value = ['PCH', 'SB']
