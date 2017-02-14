@@ -92,6 +92,10 @@ Changelog
 v1.1.1 (UNRELEASED)
 -------------------
 
+- Require Mopidy >= 2.0, as we from release 1.1.0 import
+  ``gi.repository.GstAudio``, which is incompatible with ``gobject`` which is
+  used by Mopidy < 2.0.
+
 - Don't rely on all cards which use a hardware card index to be included in the
   list returned by ``alsaaudio.cards()``. This can happen if an audio card is
   disabled, but still use up a "card index", for example when disabling the
