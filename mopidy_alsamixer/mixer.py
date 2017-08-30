@@ -57,8 +57,8 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self._last_mute = None
 
         logger.info(
-            'Mixing using ALSA, card %d, mixer control "%s".',
-            self.cardindex, self.control)
+            'Mixing using ALSA, card %d, mixer control "%s", device "%s".',
+            self.cardindex, self.control, self.device)
 
     def on_start(self):
         self._observer = AlsaMixerObserver(
