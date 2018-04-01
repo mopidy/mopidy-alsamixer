@@ -14,7 +14,7 @@ Mopidy-ALSAMixer
    :target: https://coveralls.io/r/mopidy/mopidy-alsamixer?branch=master
    :alt: Test coverage
 
-`Mopidy <http://www.mopidy.com/>`_ extension for ALSA volume control.
+`Mopidy <https://www.mopidy.com/>`_ extension for ALSA volume control.
 
 
 Dependencies
@@ -34,7 +34,7 @@ Install by running::
     pip install Mopidy-ALSAMixer
 
 Or, if available, install the Debian/Ubuntu package from `apt.mopidy.com
-<http://apt.mopidy.com/>`_.
+<https://apt.mopidy.com/>`_.
 
 
 Configuration
