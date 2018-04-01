@@ -89,7 +89,7 @@ Credits
 Changelog
 =========
 
-v1.1.1 (UNRELEASED)
+v1.1.1 (2018-04-01)
 -------------------
 
 - Require Mopidy >= 2.0, as we from release 1.1.0 import
