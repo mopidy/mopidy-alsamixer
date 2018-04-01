@@ -1,10 +1,7 @@
 *.egg-info
 *.pyc
-*.swp
-.cache/
+.pytest_cache/
 .coverage
 .tox/
 MANIFEST
-build/
 dist/
-xunit-*.xml
