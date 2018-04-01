@@ -7,6 +7,8 @@ import threading
 
 import alsaaudio
 
+import gi
+gi.require_version('GstAudio', '1.0')  # noqa
 from gi.repository import GstAudio
 
 from mopidy import exceptions, mixer
