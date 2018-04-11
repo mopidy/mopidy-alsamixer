@@ -62,7 +62,7 @@ The following configuration values are available:
   cubic scale is the default as it is closer to how the human ear percieves
   volume, and matches the volume scale used in the ``alsamixer`` program.
   
--``alsamixer/device``: select what device number you want to use. 
+- ``alsamixer/device``: select what device number you want to use. 
 Numbered from 0 and up. 0 is the default.
 
 Example ``alsamixer`` section from the Mopidy configuration file::
