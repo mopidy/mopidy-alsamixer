@@ -28,6 +28,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self.config = config
         self.cardindex = self.config['alsamixer']['card']
         self.control = self.config['alsamixer']['control']
+        self.mixerid = self.config['alsamixer']['mixerid']
         self.min_volume = self.config['alsamixer']['min_volume']
         self.max_volume = self.config['alsamixer']['max_volume']
         self.volume_scale = self.config['alsamixer']['volume_scale']
@@ -58,12 +59,12 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self._last_mute = None
 
         logger.info(
-            'Mixing using ALSA, card %d, mixer control "%s".',
-            self.cardindex, self.control)
+            'Mixing using ALSA, card %d, mixer control "%s", mixerid %d.',
+            self.cardindex, self.control, self.mixerid)
 
     def on_start(self):
         self._observer = AlsaMixerObserver(
-            cardindex=self.cardindex, control=self.control,
+            cardindex=self.cardindex, mixerid=self.mixerid, control=self.control,
             callback=self.actor_ref.proxy().trigger_events_for_changed_values)
         self._observer.start()
 
@@ -71,7 +72,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def _mixer(self):
         # The mixer must be recreated every time it is used to be able to
         # observe volume/mute changes done by other applications.
-        return alsaaudio.Mixer(cardindex=self.cardindex, control=self.control)
+        return alsaaudio.Mixer(cardindex=self.cardindex, id=self.mixerid, control=self.control)
 
     def get_volume(self):
         channels = self._mixer.getvolume()
@@ -159,12 +160,12 @@ class AlsaMixerObserver(threading.Thread):
     daemon = True
     name = 'AlsaMixerObserver'
 
-    def __init__(self, cardindex, control, callback=None):
+    def __init__(self, cardindex, mixerid, control, callback=None):
         super(AlsaMixerObserver, self).__init__()
         self.running = True
 
         # Keep the mixer instance alive for the descriptors to work
-        self.mixer = alsaaudio.Mixer(cardindex=cardindex, control=control)
+        self.mixer = alsaaudio.Mixer(cardindex=cardindex, id=mixerid, control=control)
         descriptors = self.mixer.polldescriptors()
         assert len(descriptors) == 1
         self.fd = descriptors[0][0]
