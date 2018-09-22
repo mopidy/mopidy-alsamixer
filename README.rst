@@ -51,6 +51,8 @@ The following configuration values are available:
   Other typical values includes ``PCM``. Run the command ``amixer scontrols``
   to list available controls on your system.
 
+- ``alsamixer/mixerid``: the id of the mixer control. Default is 0.
+
 - ``alsamixer/min_volume`` and ``alsamixer/max_volume``: Map the Mopidy volume
   control range to a different range. Values are in the range 0-100. Use this
   if the default range (0-100) is too wide, resulting in a small usable range
@@ -67,6 +69,7 @@ Example ``alsamixer`` section from the Mopidy configuration file::
     [alsamixer]
     card = 1
     control = PCM
+    mixerid = 0
     min_volume = 0
     max_volume = 100
     volume_scale = cubic

@@ -22,6 +22,7 @@ class Extension(ext.Extension):
         schema = super(Extension, self).get_config_schema()
         schema['card'] = config.Integer(minimum=0)
         schema['control'] = config.String()
+        schema['mixerid'] = config.Integer(minimum=0)
         schema['min_volume'] = config.Integer(minimum=0, maximum=100)
         schema['max_volume'] = config.Integer(minimum=0, maximum=100)
         schema['volume_scale'] = config.String(
