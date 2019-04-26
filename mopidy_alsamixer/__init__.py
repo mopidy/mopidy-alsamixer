@@ -20,7 +20,7 @@ class Extension(ext.Extension):
 
     def get_config_schema(self):
         schema = super(Extension, self).get_config_schema()
-        schema['card'] = config.Integer(minimum=0)
+        schema['card'] = config.Integer(minimum=-1)
         schema['control'] = config.String()
         schema['min_volume'] = config.Integer(minimum=0, maximum=100)
         schema['max_volume'] = config.Integer(minimum=0, maximum=100)
