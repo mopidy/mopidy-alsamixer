@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import logging
 import math
 import select
@@ -24,7 +22,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     name = 'alsamixer'
 
     def __init__(self, config):
-        super(AlsaMixer, self).__init__()
+        super().__init__()
         self.config = config
         self.cardindex = self.config['alsamixer']['card']
         self.control = self.config['alsamixer']['control']
@@ -160,7 +158,7 @@ class AlsaMixerObserver(threading.Thread):
     name = 'AlsaMixerObserver'
 
     def __init__(self, cardindex, control, callback=None):
-        super(AlsaMixerObserver, self).__init__()
+        super().__init__()
         self.running = True
 
         # Keep the mixer instance alive for the descriptors to work
@@ -183,7 +181,7 @@ class AlsaMixerObserver(threading.Thread):
                 events = poller.poll(timeout=1)
                 if events and self.callback is not None:
                     self.callback()
-            except IOError as exc:
+            except OSError as exc:
                 # poller.poll() will raise an IOError because of the
                 # interrupted system call when suspending the machine.
                 logger.debug('Ignored IO error: %s', exc)
