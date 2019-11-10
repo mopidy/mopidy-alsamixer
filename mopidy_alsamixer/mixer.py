@@ -34,34 +34,25 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             known_controls = alsaaudio.mixers(self.cardindex)
         except alsaaudio.ALSAAudioError:
             raise exceptions.MixerError(
-                "Could not find ALSA soundcard with index %(cardindex)d. "
-                "Known soundcards include: %(known_cards)s"
-                % {
-                    "cardindex": self.cardindex,
-                    "known_cards": ", ".join(known_cards),
-                }
+                f"Could not find ALSA soundcard with index {self.cardindex:d}. "
+                "Known soundcards include: "
+                ", ".join(known_cards)
             )
 
         if self.control not in known_controls:
             raise exceptions.MixerError(
-                "Could not find ALSA mixer control %(control)s on "
-                "card %(cardindex)d. "
-                "Known mixers on card %(cardindex)d include: "
-                "%(known_controls)s"
-                % {
-                    "control": self.control,
-                    "cardindex": self.cardindex,
-                    "known_controls": ", ".join(known_controls),
-                }
+                f"Could not find ALSA mixer control {self.control} on "
+                f"card {self.cardindex:d}. "
+                f"Known mixers on card {self.cardindex:d} include: "
+                ", ".join(known_controls)
             )
 
         self._last_volume = None
         self._last_mute = None
 
         logger.info(
-            'Mixing using ALSA, card %d, mixer control "%s".',
-            self.cardindex,
-            self.control,
+            f"Mixing using ALSA, card {self.cardindex:d}, "
+            f"mixer control {self.control!r}."
         )
 
     def on_start(self):
@@ -144,7 +135,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         try:
             channels_muted = self._mixer.getmute()
         except alsaaudio.ALSAAudioError as exc:
-            logger.debug("Getting mute state failed: %s", exc)
+            logger.debug(f"Getting mute state failed: {exc}")
             return None
         if all(channels_muted):
             return True
@@ -159,7 +150,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             self._mixer.setmute(int(mute))
             return True
         except alsaaudio.ALSAAudioError as exc:
-            logger.debug("Setting mute state failed: %s", exc)
+            logger.debug(f"Setting mute state failed: {exc}")
             return False
 
     def trigger_events_for_changed_values(self):
@@ -204,4 +195,4 @@ class AlsaMixerObserver(threading.Thread):
             except OSError as exc:
                 # poller.poll() will raise an IOError because of the
                 # interrupted system call when suspending the machine.
-                logger.debug("Ignored IO error: %s", exc)
+                logger.debug(f"Ignored IO error: {exc}")
