@@ -6,7 +6,8 @@ import threading
 import alsaaudio
 
 import gi
-gi.require_version('GstAudio', '1.0')  # noqa
+
+gi.require_version("GstAudio", "1.0")  # noqa
 from gi.repository import GstAudio
 
 from mopidy import exceptions, mixer
@@ -19,50 +20,58 @@ logger = logging.getLogger(__name__)
 
 class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
-    name = 'alsamixer'
+    name = "alsamixer"
 
     def __init__(self, config):
         super().__init__()
         self.config = config
-        self.cardindex = self.config['alsamixer']['card']
-        self.control = self.config['alsamixer']['control']
-        self.min_volume = self.config['alsamixer']['min_volume']
-        self.max_volume = self.config['alsamixer']['max_volume']
-        self.volume_scale = self.config['alsamixer']['volume_scale']
+        self.cardindex = self.config["alsamixer"]["card"]
+        self.control = self.config["alsamixer"]["control"]
+        self.min_volume = self.config["alsamixer"]["min_volume"]
+        self.max_volume = self.config["alsamixer"]["max_volume"]
+        self.volume_scale = self.config["alsamixer"]["volume_scale"]
 
         known_cards = alsaaudio.cards()
         try:
             known_controls = alsaaudio.mixers(self.cardindex)
         except alsaaudio.ALSAAudioError:
             raise exceptions.MixerError(
-                'Could not find ALSA soundcard with index %(cardindex)d. '
-                'Known soundcards include: %(known_cards)s' % {
-                    'cardindex': self.cardindex,
-                    'known_cards': ', '.join(known_cards),
-                })
+                "Could not find ALSA soundcard with index %(cardindex)d. "
+                "Known soundcards include: %(known_cards)s"
+                % {
+                    "cardindex": self.cardindex,
+                    "known_cards": ", ".join(known_cards),
+                }
+            )
 
         if self.control not in known_controls:
             raise exceptions.MixerError(
-                'Could not find ALSA mixer control %(control)s on '
-                'card %(cardindex)d. '
-                'Known mixers on card %(cardindex)d include: '
-                '%(known_controls)s' % {
-                    'control': self.control,
-                    'cardindex': self.cardindex,
-                    'known_controls': ', '.join(known_controls),
-                })
+                "Could not find ALSA mixer control %(control)s on "
+                "card %(cardindex)d. "
+                "Known mixers on card %(cardindex)d include: "
+                "%(known_controls)s"
+                % {
+                    "control": self.control,
+                    "cardindex": self.cardindex,
+                    "known_controls": ", ".join(known_controls),
+                }
+            )
 
         self._last_volume = None
         self._last_mute = None
 
         logger.info(
             'Mixing using ALSA, card %d, mixer control "%s".',
-            self.cardindex, self.control)
+            self.cardindex,
+            self.control,
+        )
 
     def on_start(self):
         self._observer = AlsaMixerObserver(
-            cardindex=self.cardindex, control=self.control,
-            callback=self.actor_ref.proxy().trigger_events_for_changed_values)
+            cardindex=self.cardindex,
+            control=self.control,
+            callback=self.actor_ref.proxy().trigger_events_for_changed_values,
+        )
         self._observer.start()
 
     @property
@@ -87,31 +96,44 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
     def mixer_volume_to_volume(self, mixer_volume):
         volume = mixer_volume
-        if self.volume_scale == 'cubic':
-            volume = GstAudio.StreamVolume.convert_volume(
-                GstAudio.StreamVolumeFormat.CUBIC,
-                GstAudio.StreamVolumeFormat.LINEAR,
-                volume / 100.0) * 100.0
-        elif self.volume_scale == 'log':
+        if self.volume_scale == "cubic":
+            volume = (
+                GstAudio.StreamVolume.convert_volume(
+                    GstAudio.StreamVolumeFormat.CUBIC,
+                    GstAudio.StreamVolumeFormat.LINEAR,
+                    volume / 100.0,
+                )
+                * 100.0
+            )
+        elif self.volume_scale == "log":
             # Uses our own formula rather than GstAudio.StreamVolume.
             # convert_volume(GstAudio.StreamVolumeFormat.LINEAR,
             # GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
             # as the result is a DB value, which we can't work with as
             # self._mixer provides a percentage.
             volume = math.pow(10, volume / 50.0)
-        volume = ((volume - self.min_volume) * 100.0
-                  / (self.max_volume - self.min_volume))
+        volume = (
+            (volume - self.min_volume)
+            * 100.0
+            / (self.max_volume - self.min_volume)
+        )
         return int(volume)
 
     def volume_to_mixer_volume(self, volume):
-        mixer_volume = (self.min_volume + volume *
-                        (self.max_volume - self.min_volume) / 100.0)
-        if self.volume_scale == 'cubic':
-            mixer_volume = GstAudio.StreamVolume.convert_volume(
-                GstAudio.StreamVolumeFormat.LINEAR,
-                GstAudio.StreamVolumeFormat.CUBIC,
-                mixer_volume / 100.0) * 100.0
-        elif self.volume_scale == 'log':
+        mixer_volume = (
+            self.min_volume
+            + volume * (self.max_volume - self.min_volume) / 100.0
+        )
+        if self.volume_scale == "cubic":
+            mixer_volume = (
+                GstAudio.StreamVolume.convert_volume(
+                    GstAudio.StreamVolumeFormat.LINEAR,
+                    GstAudio.StreamVolumeFormat.CUBIC,
+                    mixer_volume / 100.0,
+                )
+                * 100.0
+            )
+        elif self.volume_scale == "log":
             # Uses our own formula rather than GstAudio.StreamVolume.
             # convert_volume(GstAudio.StreamVolumeFormat.LINEAR,
             # GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
@@ -124,7 +146,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         try:
             channels_muted = self._mixer.getmute()
         except alsaaudio.ALSAAudioError as exc:
-            logger.debug('Getting mute state failed: %s', exc)
+            logger.debug("Getting mute state failed: %s", exc)
             return None
         if all(channels_muted):
             return True
@@ -139,7 +161,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             self._mixer.setmute(int(mute))
             return True
         except alsaaudio.ALSAAudioError as exc:
-            logger.debug('Setting mute state failed: %s', exc)
+            logger.debug("Setting mute state failed: %s", exc)
             return False
 
     def trigger_events_for_changed_values(self):
@@ -155,7 +177,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
 class AlsaMixerObserver(threading.Thread):
     daemon = True
-    name = 'AlsaMixerObserver'
+    name = "AlsaMixerObserver"
 
     def __init__(self, cardindex, control, callback=None):
         super().__init__()
@@ -184,4 +206,4 @@ class AlsaMixerObserver(threading.Thread):
             except OSError as exc:
                 # poller.poll() will raise an IOError because of the
                 # interrupted system call when suspending the machine.
-                logger.debug('Ignored IO error: %s', exc)
+                logger.debug("Ignored IO error: %s", exc)
