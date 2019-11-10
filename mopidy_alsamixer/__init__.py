@@ -1,9 +1,10 @@
 import pathlib
 
+import pkg_resources
+
 from mopidy import config, ext
 
-
-__version__ = "1.1.1"
+__version__ = pkg_resources.get_distribution("mopidy_alsamixer").version
 
 
 class Extension(ext.Extension):
