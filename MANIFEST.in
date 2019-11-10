@@ -1,8 +1,14 @@
-include .travis.yml
+include *.py
+include *.rst
 include LICENSE
 include MANIFEST.in
-include README.rst
-include mopidy_alsamixer/ext.conf
+include pyproject.toml
 include tox.ini
 
+recursive-include .circleci *
+recursive-include .github *
+
+include mopidy_alsamixer/ext.conf
+
 recursive-include tests *.py
+recursive-include tests/data *

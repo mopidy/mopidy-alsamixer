@@ -1,7 +1,9 @@
-*.egg-info
 *.pyc
-.pytest_cache/
-.coverage
-.tox/
-MANIFEST
-dist/
+/.coverage
+/.mypy_cache/
+/.pytest_cache/
+/.tox/
+/*.egg-info
+/build/
+/dist/
+/MANIFEST
