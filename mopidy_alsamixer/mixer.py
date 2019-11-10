@@ -4,15 +4,13 @@ import select
 import threading
 
 import alsaaudio
-
 import gi
+import pykka
 
 gi.require_version("GstAudio", "1.0")  # noqa
-from gi.repository import GstAudio
+from gi.repository import GstAudio  # isort:skip
 
-from mopidy import exceptions, mixer
-
-import pykka
+from mopidy import exceptions, mixer  # isort:skip
 
 
 logger = logging.getLogger(__name__)
