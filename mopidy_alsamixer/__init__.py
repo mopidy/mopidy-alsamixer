@@ -4,7 +4,7 @@ import pkg_resources
 
 from mopidy import config, ext
 
-__version__ = pkg_resources.get_distribution("mopidy_alsamixer").version
+__version__ = pkg_resources.get_distribution("Mopidy-ALSAMixer").version
 
 
 class Extension(ext.Extension):
