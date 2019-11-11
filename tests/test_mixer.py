@@ -1,7 +1,7 @@
 import unittest
+from unittest import mock
 
 import alsaaudio
-import mock
 
 from mopidy import exceptions
 from mopidy_alsamixer.mixer import AlsaMixer
