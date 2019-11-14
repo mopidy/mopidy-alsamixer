@@ -9,7 +9,7 @@ include tox.ini
 recursive-include .circleci *
 recursive-include .github *
 
-include mopidy_alsamixer/ext.conf
+include mopidy_*/ext.conf
 
 recursive-include tests *.py
 recursive-include tests/data *
