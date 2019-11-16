@@ -2,16 +2,16 @@
 Mopidy-ALSAMixer
 ****************
 
-.. image:: https://img.shields.io/pypi/v/Mopidy-ALSAMixer.svg
+.. image:: https://img.shields.io/pypi/v/Mopidy-ALSAMixer
     :target: https://pypi.python.org/pypi/Mopidy-ALSAMixer/
     :alt: Latest PyPI version
 
-.. image:: https://img.shields.io/circleci/project/mopidy/mopidy-alsamixer/master.svg
+.. image:: https://img.shields.io/circleci/build/gh/mopidy/mopidy-alsamixer
     :target: https://circleci.com/gh/mopidy/mopidy-alsamixer
     :alt: Travis CI build status
 
-.. image:: https://img.shields.io/codecov/c/github/mopidy/mopidy-alsamixer/master.svg
-    :target: https://codecov.io/gh/mopidy/mopidy-alsamixer?branch=master
+.. image:: https://img.shields.io/codecov/c/gh/mopidy/mopidy-alsamixer
+    :target: https://codecov.io/gh/mopidy/mopidy-alsamixer
     :alt: Test coverage
 
 `Mopidy <https://www.mopidy.com/>`_ extension for ALSA volume control.
