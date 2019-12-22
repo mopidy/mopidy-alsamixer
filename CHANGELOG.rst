@@ -2,6 +2,13 @@
 Changelog
 *********
 
+
+v2.0.0 (2019-12-22)
+===================
+
+- Depend on final release of Mopidy 3.0.0.
+
+
 v2.0.0rc1 (2019-11-11)
 ======================
 
@@ -10,6 +17,7 @@ v2.0.0rc1 (2019-11-11)
 - Require Python >= 3.7. No major changes required.
 
 - Update project setup.
+
 
 v1.1.1 (2018-04-01)
 ===================
@@ -23,6 +31,7 @@ v1.1.1 (2018-04-01)
   disabled, but still use up a "card index", for example when disabling the
   builtin audio card on a Raspberry Pi. (Fixes: #8)
 
+
 v1.1.0 (2017-02-12)
 ===================
 
@@ -35,20 +44,24 @@ v1.1.0 (2017-02-12)
   ``linear`` to ``cubic``, which is closer to how the human ear percieve the
   volume. (Fixes: #3, PR: #9)
 
+
 v1.0.3 (2014-07-31)
 ===================
 
 - Don't crash on epoll being interrupted by the machine suspending.
+
 
 v1.0.2 (2014-07-27)
 ===================
 
 - Handle mixer controls which does not support muting. (Fixes: #1)
 
+
 v1.0.1 (2014-07-21)
 ===================
 
 - Correctly require Mopidy 0.19 instead of 0.18.
+
 
 v1.0.0 (2014-07-21)
 ===================
