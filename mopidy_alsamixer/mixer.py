@@ -29,6 +29,9 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self.max_volume = self.config["alsamixer"]["max_volume"]
         self.volume_scale = self.config["alsamixer"]["volume_scale"]
 
+        if self.control.startswith("'") and self.control.endswith("'"):
+            self.control = self.control[1: -1]
+
         known_cards = alsaaudio.cards()
         try:
             known_controls = alsaaudio.mixers(self.cardindex)
