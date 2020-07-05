@@ -39,9 +39,14 @@ See https://mopidy.com/ext/alsamixer/ for alternative installation methods.
 Configuration
 =============
 
-The default configuration will probably work for most use cases.
+To use Mopidy-AlsaMixer the ``audio/mixer`` configuration value must be set to
+``alsamixer`` in the Mopidy configuration file::
 
-The following configuration values are available:
+    [audio]
+    mixer = alsamixer
+
+The default Mopidy-AlsaMixer configuration will probably work for most use
+cases. If not, the following configuration values are available:
 
 - ``alsamixer/card``: Which soundcard to use, if you have more than one.
   Numbered from 0 and up. 0 is the default.
