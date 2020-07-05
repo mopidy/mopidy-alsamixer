@@ -8,9 +8,9 @@ import gi
 import pykka
 
 gi.require_version("GstAudio", "1.0")  # noqa
-from gi.repository import GstAudio  # isort:skip
+from gi.repository import GstAudio  # noqa isort:skip
 
-from mopidy import exceptions, mixer  # isort:skip
+from mopidy import exceptions, mixer  # noqa isort:skip
 
 
 logger = logging.getLogger(__name__)
