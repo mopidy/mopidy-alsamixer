@@ -71,8 +71,11 @@ class MixerTest(unittest.TestCase):
         )
         config = {"alsamixer": {"card": 2, "control": "Master"}}
 
-        with self.assertRaises(exceptions.MixerError):
+        with self.assertRaises(exceptions.MixerError) as ex:
             self.get_mixer(config=config)
+
+        self.assertIn("Could not find ALSA soundcard", str(ex.exception))
+        self.assertIn("include: PCH, SB", str(ex.exception))
 
         alsa_mock.mixers.assert_called_once_with(2)
 
@@ -88,10 +91,14 @@ class MixerTest(unittest.TestCase):
 
     def test_fails_if_control_is_unknown(self, alsa_mock):
         alsa_mock.cards.return_value = ["PCH", "SB"]
+        alsa_mock.mixers.return_value = ["Headphone", "Master"]
         config = {"alsamixer": {"card": 0, "control": "Speaker"}}
 
-        with self.assertRaises(exceptions.MixerError):
+        with self.assertRaises(exceptions.MixerError) as ex:
             self.get_mixer(config=config)
+
+        self.assertIn("Could not find ALSA mixer control", str(ex.exception))
+        self.assertIn("include: Headphone, Master", str(ex.exception))
 
     def test_get_volume(self, alsa_mock):
         config = {"alsamixer": {"volume_scale": "linear"}}
