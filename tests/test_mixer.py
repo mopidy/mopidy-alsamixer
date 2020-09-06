@@ -7,7 +7,11 @@ from mopidy import exceptions
 from mopidy_alsamixer.mixer import AlsaMixer
 
 
-@mock.patch("mopidy_alsamixer.mixer.alsaaudio", spec=alsaaudio)
+@mock.patch(
+    "mopidy_alsamixer.mixer.alsaaudio",
+    spec=alsaaudio,
+    ALSAAudioError=alsaaudio.ALSAAudioError,
+)
 class MixerTest(unittest.TestCase):
 
     default_config = {
@@ -194,7 +198,6 @@ class MixerTest(unittest.TestCase):
         mixer_mock.getmute.assert_called_once_with()
 
     def test_get_mute_when_unsupported(self, alsa_mock):
-        alsa_mock.ALSAAudioError = alsaaudio.ALSAAudioError
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getmute.side_effect = alsa_mock.ALSAAudioError
@@ -212,7 +215,6 @@ class MixerTest(unittest.TestCase):
         mixer_mock.setmute.assert_called_once_with(1)
 
     def test_set_mute_when_unsupported(self, alsa_mock):
-        alsa_mock.ALSAAudioError = alsaaudio.ALSAAudioError
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.setmute.side_effect = alsa_mock.ALSAAudioError
