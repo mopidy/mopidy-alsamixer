@@ -7,7 +7,11 @@ from mopidy import exceptions
 from mopidy_alsamixer.mixer import AlsaMixer
 
 
-@mock.patch("mopidy_alsamixer.mixer.alsaaudio", spec=alsaaudio)
+@mock.patch(
+    "mopidy_alsamixer.mixer.alsaaudio",
+    spec=alsaaudio,
+    ALSAAudioError=alsaaudio.ALSAAudioError,
+)
 class MixerTest(unittest.TestCase):
 
     default_config = {
@@ -71,8 +75,11 @@ class MixerTest(unittest.TestCase):
         )
         config = {"alsamixer": {"card": 2, "control": "Master"}}
 
-        with self.assertRaises(exceptions.MixerError):
+        with self.assertRaises(exceptions.MixerError) as ex:
             self.get_mixer(config=config)
+
+        self.assertIn("Could not find ALSA soundcard", str(ex.exception))
+        self.assertIn("include: PCH, SB", str(ex.exception))
 
         alsa_mock.mixers.assert_called_once_with(2)
 
@@ -88,10 +95,14 @@ class MixerTest(unittest.TestCase):
 
     def test_fails_if_control_is_unknown(self, alsa_mock):
         alsa_mock.cards.return_value = ["PCH", "SB"]
+        alsa_mock.mixers.return_value = ["Headphone", "Master"]
         config = {"alsamixer": {"card": 0, "control": "Speaker"}}
 
-        with self.assertRaises(exceptions.MixerError):
+        with self.assertRaises(exceptions.MixerError) as ex:
             self.get_mixer(config=config)
+
+        self.assertIn("Could not find ALSA mixer control", str(ex.exception))
+        self.assertIn("include: Headphone, Master", str(ex.exception))
 
     def test_get_volume(self, alsa_mock):
         config = {"alsamixer": {"volume_scale": "linear"}}
@@ -187,7 +198,6 @@ class MixerTest(unittest.TestCase):
         mixer_mock.getmute.assert_called_once_with()
 
     def test_get_mute_when_unsupported(self, alsa_mock):
-        alsa_mock.ALSAAudioError = alsaaudio.ALSAAudioError
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getmute.side_effect = alsa_mock.ALSAAudioError
@@ -205,7 +215,6 @@ class MixerTest(unittest.TestCase):
         mixer_mock.setmute.assert_called_once_with(1)
 
     def test_set_mute_when_unsupported(self, alsa_mock):
-        alsa_mock.ALSAAudioError = alsaaudio.ALSAAudioError
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.setmute.side_effect = alsa_mock.ALSAAudioError
