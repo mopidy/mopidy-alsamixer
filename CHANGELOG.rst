@@ -3,6 +3,13 @@ Changelog
 *********
 
 
+v2.0.1 (UNRELEASED)
+===================
+
+- Provide full error descriptions for our MixerError exceptions. (Fixes: #26,
+  PR: #27)
+
+
 v2.0.0 (2019-12-22)
 ===================
 
