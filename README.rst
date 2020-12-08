@@ -81,7 +81,7 @@ Project resources
 
 - `Source code <https://github.com/mopidy/mopidy-alsamixer>`_
 - `Issue tracker <https://github.com/mopidy/mopidy-alsamixer/issues>`_
-- `Changelog <https://github.com/mopidy/mopidy-alsamixer/blob/master/CHANGELOG.rst>`_
+- `Changelog <https://github.com/mopidy/mopidy-alsamixer/releases>`_
 
 
 Credits
