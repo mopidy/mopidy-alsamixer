@@ -6,9 +6,9 @@ Mopidy-ALSAMixer
     :target: https://pypi.python.org/pypi/Mopidy-ALSAMixer/
     :alt: Latest PyPI version
 
-.. image:: https://img.shields.io/circleci/build/gh/mopidy/mopidy-alsamixer
-    :target: https://circleci.com/gh/mopidy/mopidy-alsamixer
-    :alt: Travis CI build status
+.. image:: https://img.shields.io/github/workflow/status/mopidy/mopidy-alsamixer/CI
+    :target: https://github.com/mopidy/mopidy-alsamixer/actions
+    :alt: CI build status
 
 .. image:: https://img.shields.io/codecov/c/gh/mopidy/mopidy-alsamixer
     :target: https://codecov.io/gh/mopidy/mopidy-alsamixer
@@ -39,9 +39,14 @@ See https://mopidy.com/ext/alsamixer/ for alternative installation methods.
 Configuration
 =============
 
-The default configuration will probably work for most use cases.
+To use Mopidy-AlsaMixer the ``audio/mixer`` configuration value must be set to
+``alsamixer`` in the Mopidy configuration file::
 
-The following configuration values are available:
+    [audio]
+    mixer = alsamixer
+
+The default Mopidy-AlsaMixer configuration will probably work for most use
+cases. If not, the following configuration values are available:
 
 - ``alsamixer/card``: Which soundcard to use, if you have more than one.
   Numbered from 0 and up. 0 is the default.
@@ -76,7 +81,7 @@ Project resources
 
 - `Source code <https://github.com/mopidy/mopidy-alsamixer>`_
 - `Issue tracker <https://github.com/mopidy/mopidy-alsamixer/issues>`_
-- `Changelog <https://github.com/mopidy/mopidy-alsamixer/blob/master/CHANGELOG.rst>`_
+- `Changelog <https://github.com/mopidy/mopidy-alsamixer/releases>`_
 
 
 Credits
