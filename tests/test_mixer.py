@@ -1,6 +1,8 @@
 import unittest
 from unittest import mock
 
+import copy
+
 import alsaaudio
 
 from mopidy import exceptions
@@ -32,7 +34,7 @@ class MixerTest(unittest.TestCase):
             alsa_mock.cards.return_value = ["PCH"]
             alsa_mock.mixers.return_value = ["Master"]
         if apply_default_config:
-            actual_config = MixerTest.default_config.copy()
+            actual_config = copy.deepcopy(MixerTest.default_config)
             actual_config["alsamixer"].update(config["alsamixer"])
         else:
             actual_config = config
@@ -40,7 +42,7 @@ class MixerTest(unittest.TestCase):
 
     def test_has_config(self, alsa_mock):
         config = {"alsamixer": {"card": 0, "control": "Master"}}
-        actual_config = MixerTest.default_config.copy()
+        actual_config = copy.deepcopy(MixerTest.default_config)
         actual_config["alsamixer"].update(config["alsamixer"])
 
         mixer = self.get_mixer(
