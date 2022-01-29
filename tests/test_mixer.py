@@ -16,7 +16,8 @@ class MixerTest(unittest.TestCase):
 
     default_config = {
         "alsamixer": {
-            "card": 0,
+            "card": None,
+            "device": "default",
             "control": "Master",
             "min_volume": 0,
             "max_volume": 100,
@@ -47,6 +48,19 @@ class MixerTest(unittest.TestCase):
         )
         self.assertIs(mixer.config, actual_config)
 
+    def test_use_default_device_from_config(self, alsa_mock):
+        alsa_mock.cards.return_value = ["default", "PCH", "SB"]
+        alsa_mock.mixers.return_value = ["Master"]
+        config = {"alsamixer": {"control": "Master"}}
+
+        mixer = self.get_mixer(config=config)
+        mixer.get_volume()
+
+        alsa_mock.Mixer.assert_called_once_with(
+            device="default",
+            control="Master",
+        )
+
     def test_use_card_from_config(self, alsa_mock):
         alsa_mock.cards.return_value = ["PCH", "SB"]
         alsa_mock.mixers.return_value = ["Master"]
@@ -65,7 +79,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(config=config)
         mixer.get_volume()
 
-        alsa_mock.mixers.assert_called_once_with(2)
+        alsa_mock.mixers.assert_called_once_with(cardindex=2)
         alsa_mock.Mixer.assert_called_once_with(cardindex=2, control="Master")
 
     def test_fails_if_card_is_unknown(self, alsa_mock):
@@ -81,7 +95,38 @@ class MixerTest(unittest.TestCase):
         self.assertIn("Could not find ALSA soundcard", str(ex.exception))
         self.assertIn("include: PCH, SB", str(ex.exception))
 
-        alsa_mock.mixers.assert_called_once_with(2)
+        alsa_mock.mixers.assert_called_once_with(cardindex=2)
+
+    def test_use_device_from_config(self, alsa_mock):
+        alsa_mock.cards.return_value = ["PCH", "SB"]
+        alsa_mock.mixers.return_value = ["Master"]
+        config = {
+            "alsamixer": {
+                "card": None,
+                "device": "PCH",
+                "control": "Master",
+            }
+        }
+
+        mixer = self.get_mixer(config=config)
+        mixer.get_volume()
+
+        alsa_mock.Mixer.assert_called_once_with(device="PCH", control="Master")
+
+    def test_fails_if_device_is_unknown(self, alsa_mock):
+        alsa_mock.cards.return_value = ["PCH", "SB"]
+        alsa_mock.mixers.side_effect = alsa_mock.ALSAAudioError(
+            "No such file or directory [PCH2]"
+        )
+        config = {"alsamixer": {"device": "PCH2", "control": "Master"}}
+
+        with self.assertRaises(exceptions.MixerError) as ex:
+            self.get_mixer(config=config)
+
+        self.assertIn("Could not find ALSA soundcard", str(ex.exception))
+        self.assertIn("include: PCH, SB", str(ex.exception))
+
+        alsa_mock.mixers.assert_called_once_with(device="PCH2")
 
     def test_use_control_from_config(self, alsa_mock):
         alsa_mock.cards.return_value = ["PCH", "SB"]
