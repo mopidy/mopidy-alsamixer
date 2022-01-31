@@ -23,35 +23,33 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def __init__(self, config):
         super().__init__()
         self.config = config
-        self.cardindex = self.config["alsamixer"]["card"]
-        self.device = self.config["alsamixer"]["device"]
         self.control = self.config["alsamixer"]["control"]
+        self.device = self.config["alsamixer"]["device"]
+        card = self.config["alsamixer"]["card"]
         self.min_volume = self.config["alsamixer"]["min_volume"]
         self.max_volume = self.config["alsamixer"]["max_volume"]
         self.volume_scale = self.config["alsamixer"]["volume_scale"]
 
-        if self.cardindex is not None:
-            cardname = f"soundcard with index {self.cardindex:d}"
-        else:
-            cardname = f"soundcard with name '{self.device}'"
+        self.device_title = f"device {self.device!r}"
+        if card is not None:
+            self.device = f"hw:{card:d}"
+            self.device_title = f"card {card:d}"
 
         known_cards = alsaaudio.cards()
         try:
-            if self.cardindex is not None:
-                known_controls = alsaaudio.mixers(cardindex=self.cardindex)
-            else:
-                known_controls = alsaaudio.mixers(device=self.device)
+            known_controls = alsaaudio.mixers(device=self.device)
         except alsaaudio.ALSAAudioError:
             raise exceptions.MixerError(
-                f"Could not find ALSA {cardname}. "
+                f"Could not find ALSA {self.device_title}. "
                 "Known soundcards include: "
                 f"{', '.join(known_cards)}"
             )
 
         if self.control not in known_controls:
             raise exceptions.MixerError(
-                f"Could not find ALSA mixer control {self.control} on {cardname}. "
-                f"Known mixers on {cardname} include: "
+                "Could not find ALSA mixer control "
+                f"{self.control} on {self.device_title}. "
+                f"Known mixers on {self.device_title} include: "
                 f"{', '.join(known_controls)}"
             )
 
@@ -59,13 +57,12 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self._last_mute = None
 
         logger.info(
-            f"Mixing using ALSA, {cardname}, "
+            f"Mixing using ALSA, {self.device_title}, "
             f"mixer control {self.control!r}."
         )
 
     def on_start(self):
         self._observer = AlsaMixerObserver(
-            cardindex=self.cardindex,
             device=self.device,
             control=self.control,
             callback=self.actor_ref.proxy().trigger_events_for_changed_values,
@@ -76,16 +73,10 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def _mixer(self):
         # The mixer must be recreated every time it is used to be able to
         # observe volume/mute changes done by other applications.
-        if self.cardindex is not None:
-            return alsaaudio.Mixer(
-                cardindex=self.cardindex,
-                control=self.control,
-            )
-        else:
-            return alsaaudio.Mixer(
-                device=self.device,
-                control=self.control,
-            )
+        return alsaaudio.Mixer(
+            device=self.device,
+            control=self.control,
+        )
 
     def get_volume(self):
         channels = self._mixer.getvolume()
@@ -186,15 +177,12 @@ class AlsaMixerObserver(threading.Thread):
     daemon = True
     name = "AlsaMixerObserver"
 
-    def __init__(self, cardindex, device, control, callback=None):
+    def __init__(self, device, control, callback=None):
         super().__init__()
         self.running = True
 
         # Keep the mixer instance alive for the descriptors to work
-        if cardindex is not None:
-            self.mixer = alsaaudio.Mixer(cardindex=cardindex, control=control)
-        else:
-            self.mixer = alsaaudio.Mixer(device=device, control=control)
+        self.mixer = alsaaudio.Mixer(device=device, control=control)
 
         descriptors = self.mixer.polldescriptors()
         assert len(descriptors) == 1

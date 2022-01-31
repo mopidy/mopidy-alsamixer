@@ -1,7 +1,6 @@
+import copy
 import unittest
 from unittest import mock
-
-import copy
 
 import alsaaudio
 
@@ -18,8 +17,8 @@ class MixerTest(unittest.TestCase):
 
     default_config = {
         "alsamixer": {
-            "card": None,
             "device": "default",
+            "card": None,
             "control": "Master",
             "min_volume": 0,
             "max_volume": 100,
@@ -29,7 +28,7 @@ class MixerTest(unittest.TestCase):
 
     def get_mixer(self, alsa_mock=None, config=None, apply_default_config=True):
         if config is None:
-            config = {"alsamixer": {"card": 0, "control": "Master"}}
+            config = {"alsamixer": {"device": "default", "control": "Master"}}
         if alsa_mock is not None:
             alsa_mock.cards.return_value = ["PCH"]
             alsa_mock.mixers.return_value = ["Master"]
@@ -41,7 +40,7 @@ class MixerTest(unittest.TestCase):
         return AlsaMixer(config=actual_config)
 
     def test_has_config(self, alsa_mock):
-        config = {"alsamixer": {"card": 0, "control": "Master"}}
+        config = {"alsamixer": {"device": "default", "control": "Master"}}
         actual_config = copy.deepcopy(MixerTest.default_config)
         actual_config["alsamixer"].update(config["alsamixer"])
 
@@ -51,7 +50,7 @@ class MixerTest(unittest.TestCase):
         self.assertIs(mixer.config, actual_config)
 
     def test_use_default_device_from_config(self, alsa_mock):
-        alsa_mock.cards.return_value = ["default", "PCH", "SB"]
+        alsa_mock.cards.return_value = ["PCH", "SB"]
         alsa_mock.mixers.return_value = ["Master"]
         config = {"alsamixer": {"control": "Master"}}
 
@@ -63,48 +62,11 @@ class MixerTest(unittest.TestCase):
             control="Master",
         )
 
-    def test_use_card_from_config(self, alsa_mock):
-        alsa_mock.cards.return_value = ["PCH", "SB"]
-        alsa_mock.mixers.return_value = ["Master"]
-        config = {"alsamixer": {"card": 1, "control": "Master"}}
-
-        mixer = self.get_mixer(config=config)
-        mixer.get_volume()
-
-        alsa_mock.Mixer.assert_called_once_with(cardindex=1, control="Master")
-
-    def test_use_card_with_index_not_in_cards_list(self, alsa_mock):
-        alsa_mock.cards.return_value = ["PCH", "SB"]
-        alsa_mock.mixers.return_value = ["Master"]
-        config = {"alsamixer": {"card": 2, "control": "Master"}}
-
-        mixer = self.get_mixer(config=config)
-        mixer.get_volume()
-
-        alsa_mock.mixers.assert_called_once_with(cardindex=2)
-        alsa_mock.Mixer.assert_called_once_with(cardindex=2, control="Master")
-
-    def test_fails_if_card_is_unknown(self, alsa_mock):
-        alsa_mock.cards.return_value = ["PCH", "SB"]
-        alsa_mock.mixers.side_effect = alsa_mock.ALSAAudioError(
-            "No such file or directory [hw:2]"
-        )
-        config = {"alsamixer": {"card": 2, "control": "Master"}}
-
-        with self.assertRaises(exceptions.MixerError) as ex:
-            self.get_mixer(config=config)
-
-        self.assertIn("Could not find ALSA soundcard", str(ex.exception))
-        self.assertIn("include: PCH, SB", str(ex.exception))
-
-        alsa_mock.mixers.assert_called_once_with(cardindex=2)
-
     def test_use_device_from_config(self, alsa_mock):
         alsa_mock.cards.return_value = ["PCH", "SB"]
         alsa_mock.mixers.return_value = ["Master"]
         config = {
             "alsamixer": {
-                "card": None,
                 "device": "PCH",
                 "control": "Master",
             }
@@ -125,25 +87,61 @@ class MixerTest(unittest.TestCase):
         with self.assertRaises(exceptions.MixerError) as ex:
             self.get_mixer(config=config)
 
-        self.assertIn("Could not find ALSA soundcard", str(ex.exception))
+        self.assertIn("Could not find ALSA device", str(ex.exception))
         self.assertIn("include: PCH, SB", str(ex.exception))
 
         alsa_mock.mixers.assert_called_once_with(device="PCH2")
 
+    def test_use_card_from_config(self, alsa_mock):
+        alsa_mock.cards.return_value = ["PCH", "SB"]
+        alsa_mock.mixers.return_value = ["Master"]
+        config = {"alsamixer": {"card": 1, "control": "Master"}}
+
+        mixer = self.get_mixer(config=config)
+        mixer.get_volume()
+
+        alsa_mock.Mixer.assert_called_once_with(device="hw:1", control="Master")
+
+    def test_use_card_with_index_not_in_cards_list(self, alsa_mock):
+        alsa_mock.cards.return_value = ["PCH", "SB"]
+        alsa_mock.mixers.return_value = ["Master"]
+        config = {"alsamixer": {"card": 2, "control": "Master"}}
+
+        mixer = self.get_mixer(config=config)
+        mixer.get_volume()
+
+        alsa_mock.mixers.assert_called_once_with(device="hw:2")
+        alsa_mock.Mixer.assert_called_once_with(device="hw:2", control="Master")
+
+    def test_fails_if_card_is_unknown(self, alsa_mock):
+        alsa_mock.cards.return_value = ["PCH", "SB"]
+        alsa_mock.mixers.side_effect = alsa_mock.ALSAAudioError(
+            "No such file or directory [hw:2]"
+        )
+        config = {"alsamixer": {"card": 2, "control": "Master"}}
+
+        with self.assertRaises(exceptions.MixerError) as ex:
+            self.get_mixer(config=config)
+
+        self.assertIn("Could not find ALSA card", str(ex.exception))
+        self.assertIn("include: PCH, SB", str(ex.exception))
+
+        alsa_mock.mixers.assert_called_once_with(device="hw:2")
+
     def test_use_control_from_config(self, alsa_mock):
         alsa_mock.cards.return_value = ["PCH", "SB"]
         alsa_mock.mixers.return_value = ["Speaker"]
-        config = {"alsamixer": {"card": 0, "control": "Speaker"}}
+        config = {"alsamixer": {"device": "PCH", "control": "Speaker"}}
         mixer = self.get_mixer(config=config)
 
         mixer.get_volume()
 
-        alsa_mock.Mixer.assert_called_once_with(cardindex=0, control="Speaker")
+        alsa_mock.Mixer.assert_called_once_with(device="PCH", control="Speaker")
 
     def test_fails_if_control_is_unknown(self, alsa_mock):
         alsa_mock.cards.return_value = ["PCH", "SB"]
         alsa_mock.mixers.return_value = ["Headphone", "Master"]
-        config = {"alsamixer": {"card": 0, "control": "Speaker"}}
+        config = {"alsamixer": {"device": "PCH", "control": "Speaker"}}
 
         with self.assertRaises(exceptions.MixerError) as ex:
             self.get_mixer(config=config)

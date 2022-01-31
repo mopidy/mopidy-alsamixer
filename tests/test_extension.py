@@ -12,8 +12,8 @@ class ExtensionTest(unittest.TestCase):
 
         self.assertIn("[alsamixer]", config)
         self.assertIn("enabled = true", config)
-        self.assertIn("card =", config)
         self.assertIn("device = default", config)
+        self.assertIn("card =", config)
         self.assertIn("control = Master", config)
 
     def test_get_config_schema(self):
@@ -21,8 +21,8 @@ class ExtensionTest(unittest.TestCase):
 
         schema = ext.get_config_schema()
 
-        self.assertIn("card", schema)
         self.assertIn("device", schema)
+        self.assertIn("card", schema)
         self.assertIn("control", schema)
 
     def test_setup(self):
