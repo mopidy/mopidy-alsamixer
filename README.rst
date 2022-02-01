@@ -48,11 +48,11 @@ To use Mopidy-AlsaMixer the ``audio/mixer`` configuration value must be set to
 The default Mopidy-AlsaMixer configuration will probably work for most use
 cases. If not, the following configuration values are available:
 
-- ``alsamixer/card``: Which soundcard should be used, specified by its index.
-  Numbered from 0 and up. If specified, ``alsamixer/device`` is ignored.
-
 - ``alsamixer/device``: Which soundcard should be used, specified by its string
   alias. Defaults to ``default``.
+
+- ``alsamixer/card``: Which soundcard should be used, specified by its index.
+  Numbered from 0 and up. If specified, ``alsamixer/device`` is ignored.
 
 - ``alsamixer/control``: Which ALSA control should be used. Defaults to ``Master``.
   Other typical values includes ``PCM``. Run the command ``amixer scontrols``
