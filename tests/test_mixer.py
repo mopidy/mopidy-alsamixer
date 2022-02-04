@@ -1,11 +1,18 @@
+import contextlib
 import copy
+import errno
+import os
+import select
+import threading
+import time
 import unittest
 from unittest import mock
 
 import alsaaudio
-
 from mopidy import exceptions
-from mopidy_alsamixer.mixer import AlsaMixer
+
+from mopidy_alsamixer.mixer import AlsaMixer, AlsaMixerObserver
+from mopidy_alsamixer.polling_actor import PollingActorInbox
 
 
 @mock.patch(
@@ -37,6 +44,7 @@ class MixerTest(unittest.TestCase):
             actual_config["alsamixer"].update(config["alsamixer"])
         else:
             actual_config = config
+
         return AlsaMixer(config=actual_config)
 
     def test_has_config(self, alsa_mock):
@@ -320,3 +328,138 @@ class MixerTest(unittest.TestCase):
         mixer_mock.getmute.assert_called_once_with()
         mixer.trigger_volume_changed.assert_called_once_with(75)
         mixer.trigger_mute_changed.assert_called_once_with(True)
+
+    def test_await_mixer(self, alsa_mock):
+        mixer_mock = mock.Mock()
+        mixer = self.get_mixer(alsa_mock)
+
+        alsa_mock.Mixer.side_effect = (alsa_mock.ALSAAudioError(""), mixer_mock)
+        self.assertEqual(mixer._await_mixer(sleep=False), mixer_mock)
+        self.assertEqual(alsa_mock.Mixer.call_count, 2)
+        alsa_mock.Mixer.reset_mock()
+
+        alsa_mock.Mixer.side_effect = (alsa_mock.ALSAAudioError(""), mixer_mock)
+        self.assertEqual(
+            mixer._await_mixer(OSError(errno.EBADF), sleep=False),
+            mixer_mock,
+        )
+        self.assertEqual(alsa_mock.Mixer.call_count, 2)
+
+
+@mock.patch(
+    "mopidy_alsamixer.mixer.AlsaMixer",
+    spec=AlsaMixer,
+)
+class ObserverTest(unittest.TestCase):
+    @contextlib.contextmanager
+    def running_observer(self, mixer_mock, parent_mock):
+        event = threading.Event()
+
+        def side_effect(*args):
+            event.set()
+            return mock.Mock()(*args)
+
+        parent_mock.trigger_events_for_changed_values.side_effect = side_effect
+        parent_mock.restart_observer.side_effect = side_effect
+
+        observer = AlsaMixerObserver.start(mixer_mock, parent_mock)
+        yield observer
+
+        event.wait()
+        observer.stop()
+
+    @contextlib.contextmanager
+    def pipes(self, n, close=True):
+        fds = tuple(os.pipe() for i in range(n))
+        yield fds
+
+        if close:
+            for rfd, wfd in fds:
+                os.close(rfd)
+                os.close(wfd)
+
+    def test_multiple_fd_multiple_events(self, parent_mock):
+        mixer_mock = mock.Mock()
+
+        with self.pipes(3) as fds:
+            mixer_mock.polldescriptors.return_value = (
+                (fds[0][0], select.EPOLLOUT),
+                (fds[1][0], select.EPOLLIN),
+                (fds[2][0], select.EPOLLIN | select.EPOLLOUT | select.EPOLLPRI),
+            )
+
+            with self.running_observer(mixer_mock, parent_mock):
+                os.write(fds[1][1], b"\xFF")
+                time.sleep(1)
+                os.write(fds[1][1], b"\xFF")
+                os.write(fds[2][1], b"\xFF")
+                time.sleep(1)
+                os.write(fds[0][1], b"\xFF")  # Should be ignored
+                time.sleep(1)
+                os.write(fds[1][1], b"\xFF")
+                time.sleep(1)
+
+        mixer_mock.polldescriptors.assert_called_once_with()
+        self.assertEqual(
+            parent_mock.trigger_events_for_changed_values.call_count, 3
+        )
+        parent_mock.restart_observer.assert_not_called()
+
+    def test_mixer_disconnect(self, parent_mock):
+        mixer_mock = mock.Mock()
+
+        with self.pipes(1, False) as fds:
+            mixer_mock.polldescriptors.return_value = (
+                (
+                    fds[0][1],
+                    select.EPOLLIN,
+                ),  # Note that we pass write end of the pipe
+            )
+
+            with self.running_observer(mixer_mock, parent_mock):
+                os.close(
+                    fds[0][0]
+                )  # Closing read end of the pipe triggers EPOLLERR
+
+        mixer_mock.polldescriptors.assert_called_once_with()
+        parent_mock.restart_observer.assert_called_once()
+        parent_mock.trigger_events_for_changed_values.assert_not_called()
+
+    def test_poll_exception(self, parent_mock):
+        mixer_mock = mock.Mock()
+        mixer_mock.polldescriptors.return_value = tuple()
+
+        with self.running_observer(mixer_mock, parent_mock) as observer:
+            observer._actor._poll = mock.Mock()
+            observer._actor._poll.poll.side_effect = OSError
+
+            observer._actor._wake()
+            time.sleep(1)
+
+        parent_mock.restart_observer.assert_called_once()
+        parent_mock.trigger_events_for_changed_values.assert_not_called()
+
+    def test_combine_filter(self, parent_mock):
+        combiner = PollingActorInbox._combine_filter()
+
+        x = (
+            (0, select.EPOLLERR),
+            (1, select.EPOLLERR),
+            (0, select.EPOLLIN),
+            (1, select.EPOLLOUT),
+            (0, select.EPOLLERR),
+            (1, select.EPOLLIN | select.EPOLLERR),
+            (0, select.EPOLLIN),
+            (1, select.EPOLLHUP),
+        )
+
+        y = (
+            (0, select.EPOLLERR),
+            (1, select.EPOLLERR),
+            (0, select.EPOLLIN),
+            (0, select.EPOLLERR),
+            (1, select.EPOLLIN | select.EPOLLERR),
+            (1, select.EPOLLHUP),
+        )
+
+        self.assertEqual(tuple(filter(combiner, x)), y)
