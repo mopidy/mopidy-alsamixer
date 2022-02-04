@@ -1,7 +1,8 @@
 import logging
 import math
+import random
 import select
-import threading
+import time
 
 import alsaaudio
 import gi
@@ -12,6 +13,7 @@ from gi.repository import GstAudio  # noqa isort:skip
 
 from mopidy import exceptions, mixer  # noqa isort:skip
 
+from .polling_actor import PollingActor  # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
 
         self._last_volume = None
         self._last_mute = None
+        self._observer = None
 
         logger.info(
             f"Mixing using ALSA, {self.device_title}, "
@@ -62,12 +65,25 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         )
 
     def on_start(self):
-        self._observer = AlsaMixerObserver(
-            device=self.device,
-            control=self.control,
-            callback=self.actor_ref.proxy().trigger_events_for_changed_values,
+        self._observer = AlsaMixerObserver.start(
+            self._await_mixer(), self.actor_ref.proxy()
         )
-        self._observer.start()
+
+    def on_stop(self):
+        self._stop_observer()
+
+    def on_failure(self, exception_type, exception_value, traceback):
+        self._stop_observer()
+
+    def restart_observer(self, exc=None):
+        self._stop_observer()
+        self._observer = AlsaMixerObserver.start(
+            self._await_mixer(exc), self.actor_ref.proxy()
+        )
+
+    def _stop_observer(self):
+        if self._observer is not None and self._observer.is_alive():
+            self._observer.stop()
 
     @property
     def _mixer(self):
@@ -77,6 +93,25 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             device=self.device,
             control=self.control,
         )
+
+    def _await_mixer(self, exc_0=None, sleep=True):
+        while True:
+            try:
+                if exc_0 is not None:
+                    exc, exc_0 = exc_0, None
+                    raise exc
+
+                return self._mixer
+
+            except (alsaaudio.ALSAAudioError, OSError) as exc:
+                logger.info(
+                    f"Could not open ALSA {self.device_title}. "
+                    "Retrying in a few seconds... "
+                    f"Error: {exc}"
+                )
+
+                if sleep:
+                    time.sleep(random.uniform(7, 10))
 
     def get_volume(self):
         channels = self._mixer.getvolume()
@@ -173,36 +208,37 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             self.trigger_mute_changed(self._last_mute)
 
 
-class AlsaMixerObserver(threading.Thread):
-    daemon = True
-    name = "AlsaMixerObserver"
+class AlsaMixerObserver(PollingActor):
 
-    def __init__(self, device, control, callback=None):
-        super().__init__()
-        self.running = True
+    name = "alsamixer-observer"
 
-        # Keep the mixer instance alive for the descriptors to work
-        self.mixer = alsaaudio.Mixer(device=device, control=control)
+    combine_events = True
 
-        descriptors = self.mixer.polldescriptors()
-        assert len(descriptors) == 1
-        self.fd = descriptors[0][0]
-        self.event_mask = descriptors[0][1]
+    def __init__(self, mixer, parent):
+        # Note: ALSA mixer instance must be kept alive
+        # to keep poll descriptors open
+        self._mixer = mixer
+        self._parent = parent
 
-        self.callback = callback
+        super().__init__(
+            fds=tuple(
+                (fd, event_mask | select.EPOLLET)
+                for (fd, event_mask) in self._mixer.polldescriptors()
+            )
+        )
 
-    def stop(self):
-        self.running = False
+    def on_start(self):
+        logger.debug(
+            f"Starting AlsaMixerObserver with {len(self._fds)} valid poll descriptors"
+        )
 
-    def run(self):
-        poller = select.epoll()
-        poller.register(self.fd, self.event_mask | select.EPOLLET)
-        while self.running:
-            try:
-                events = poller.poll(timeout=1)
-                if events and self.callback is not None:
-                    self.callback()
-            except OSError as exc:
-                # poller.poll() will raise an IOError because of the
-                # interrupted system call when suspending the machine.
-                logger.debug(f"Ignored IO error: {exc}")
+    def on_failure(self, exception_type, exception_value, traceback):
+        if exception_type is OSError:
+            # OSError can normally occur after suspend/resume or device disconnection
+            self._parent.restart_observer(exception_value)
+
+    def on_poll(self, fd, event):
+        if event & (select.EPOLLHUP | select.EPOLLERR):
+            self._parent.restart_observer()
+        else:
+            self._parent.trigger_events_for_changed_values().get()
