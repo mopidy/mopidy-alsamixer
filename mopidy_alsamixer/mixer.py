@@ -2,6 +2,7 @@ import logging
 import math
 import random
 import select
+import struct
 import time
 
 import alsaaudio
@@ -226,10 +227,16 @@ class AlsaMixerObserver(PollingActor):
         self._mixer = mixer
         self._parent = parent
 
+        # FIXME: Remove when a new version of pyalsaaudio is released
+        # See https://github.com/larsimmisch/pyalsaaudio/pull/108
+        def check_fd(fd):
+            return fd != -1 and fd != struct.unpack("I", b"\xFF\xFF\xFF\xFF")[0]
+
         super().__init__(
             fds=tuple(
                 (fd, event_mask | select.EPOLLET)
                 for (fd, event_mask) in self._mixer.polldescriptors()
+                if check_fd(fd)
             )
         )
 
