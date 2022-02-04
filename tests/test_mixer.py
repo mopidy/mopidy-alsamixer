@@ -205,6 +205,12 @@ class MixerTest(unittest.TestCase):
 
         mixer_mock.getvolume.assert_called_once_with()
 
+    def test_get_volume_when_unavailable(self, alsa_mock):
+        mixer = self.get_mixer(alsa_mock)
+        alsa_mock.Mixer.side_effect = alsaaudio.ALSAAudioError
+
+        self.assertIsNone(mixer.get_volume())
+
     def test_set_volume(self, alsa_mock):
         config = {"alsamixer": {"volume_scale": "linear"}}
         mixer = self.get_mixer(alsa_mock, config=config)
@@ -231,6 +237,12 @@ class MixerTest(unittest.TestCase):
         self.assertTrue(mixer.set_volume(74))
 
         mixer_mock.setvolume.assert_called_once_with(93)
+
+    def test_set_volume_when_unavailable(self, alsa_mock):
+        mixer = self.get_mixer(alsa_mock)
+        alsa_mock.Mixer.side_effect = alsaaudio.ALSAAudioError
+
+        self.assertIs(mixer.set_volume(74), False)
 
     def test_get_mute_when_muted(self, alsa_mock):
         mixer = self.get_mixer(alsa_mock)

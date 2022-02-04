@@ -114,7 +114,10 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
                     time.sleep(random.uniform(7, 10))
 
     def get_volume(self):
-        channels = self._mixer.getvolume()
+        try:
+            channels = self._mixer.getvolume()
+        except alsaaudio.ALSAAudioError:
+            return None
         if not channels:
             return None
         elif channels.count(channels[0]) == len(channels):
@@ -124,7 +127,11 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             return None
 
     def set_volume(self, volume):
-        self._mixer.setvolume(self.volume_to_mixer_volume(volume))
+        try:
+            self._mixer.setvolume(self.volume_to_mixer_volume(volume))
+        except alsaaudio.ALSAAudioError as exc:
+            logger.debug(f"Setting volume failed: {exc}")
+            return False
         return True
 
     def mixer_volume_to_volume(self, mixer_volume):
@@ -178,8 +185,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def get_mute(self):
         try:
             channels_muted = self._mixer.getmute()
-        except alsaaudio.ALSAAudioError as exc:
-            logger.debug(f"Getting mute state failed: {exc}")
+        except alsaaudio.ALSAAudioError:
             return None
         if all(channels_muted):
             return True
