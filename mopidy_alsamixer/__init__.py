@@ -18,7 +18,8 @@ class Extension(ext.Extension):
 
     def get_config_schema(self):
         schema = super().get_config_schema()
-        schema["card"] = config.Integer(minimum=0)
+        schema["device"] = config.String()
+        schema["card"] = config.Integer(optional=True, minimum=0)
         schema["control"] = config.String()
         schema["min_volume"] = config.Integer(minimum=0, maximum=100)
         schema["max_volume"] = config.Integer(minimum=0, maximum=100)
