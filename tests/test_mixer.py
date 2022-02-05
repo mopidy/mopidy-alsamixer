@@ -403,7 +403,6 @@ class ObserverTest(unittest.TestCase):
             with self.running_observer(mixer_mock, parent_mock):
                 os.write(fds[1][1], b"\xFF")
                 time.sleep(1)
-                os.write(fds[1][1], b"\xFF")
                 os.write(fds[2][1], b"\xFF")
                 time.sleep(1)
                 os.write(fds[0][1], b"\xFF")  # Should be ignored
