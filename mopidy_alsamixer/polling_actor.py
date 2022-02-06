@@ -128,7 +128,9 @@ class PollingActorInbox(queue.Queue):
                 else:
                     # TODO: Since this can be called more than once
                     # we need to properly update timeout if it isn't None
-                    events = self._actor._listen(timeout)
+                    events = self._actor._listen(
+                        timeout * 1000 if timeout is not None else None
+                    )
             except Exception:
                 return pykka._envelope.Envelope(
                     ActorError(exc_info=sys.exc_info())
