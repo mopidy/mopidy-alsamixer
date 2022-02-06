@@ -117,22 +117,28 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def get_volume(self):
         try:
             channels = self._mixer.getvolume()
-        except alsaaudio.ALSAAudioError:
+        except alsaaudio.ALSAAudioError as exc:
+            logger.debug(f"Could not get ALSA mixer volume: {exc}")
             return None
+
         if not channels:
             return None
         elif channels.count(channels[0]) == len(channels):
             return self.mixer_volume_to_volume(channels[0])
         else:
-            # Not all channels have the same volume
+            logger.debug(
+                "Could not determine single ALSA mixer volume "
+                "because channels have different volumes"
+            )
             return None
 
     def set_volume(self, volume):
         try:
             self._mixer.setvolume(self.volume_to_mixer_volume(volume))
         except alsaaudio.ALSAAudioError as exc:
-            logger.debug(f"Setting volume failed: {exc}")
+            logger.debug(f"Could not set ALSA mixer volume: {exc}")
             return False
+
         return True
 
     def mixer_volume_to_volume(self, mixer_volume):
@@ -186,14 +192,19 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def get_mute(self):
         try:
             channels_muted = self._mixer.getmute()
-        except alsaaudio.ALSAAudioError:
+        except alsaaudio.ALSAAudioError as exc:
+            logger.debug(f"Could not get ALSA mixer mute state: {exc}")
             return None
+
         if all(channels_muted):
             return True
         elif not any(channels_muted):
             return False
         else:
-            # Not all channels have the same mute state
+            logger.debug(
+                "Could not determine single ALSA mixer mute state "
+                "because channels have different mute states"
+            )
             return None
 
     def set_mute(self, mute):
@@ -201,7 +212,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             self._mixer.setmute(int(mute))
             return True
         except alsaaudio.ALSAAudioError as exc:
-            logger.debug(f"Setting mute state failed: {exc}")
+            logger.debug(f"Could not set ALSA mixer mute state: {exc}")
             return False
 
     def trigger_events_for_changed_values(self):
