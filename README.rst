@@ -6,7 +6,7 @@ Mopidy-ALSAMixer
     :target: https://pypi.python.org/pypi/Mopidy-ALSAMixer/
     :alt: Latest PyPI version
 
-.. image:: https://img.shields.io/github/workflow/status/mopidy/mopidy-alsamixer/CI
+.. image:: https://img.shields.io/github/actions/workflow/status/mopidy/mopidy-alsamixer/ci.yml?branch=main
     :target: https://github.com/mopidy/mopidy-alsamixer/actions
     :alt: CI build status
 
