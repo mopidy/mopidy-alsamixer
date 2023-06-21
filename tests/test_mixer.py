@@ -14,7 +14,6 @@ from mopidy_alsamixer.mixer import AlsaMixer
     ALSAAudioError=alsaaudio.ALSAAudioError,
 )
 class MixerTest(unittest.TestCase):
-
     default_config = {
         "alsamixer": {
             "device": "default",
