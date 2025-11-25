@@ -1,14 +1,13 @@
 import pathlib
-
-import pkg_resources
+from importlib.metadata import version
 
 from mopidy import config, ext
 
-__version__ = pkg_resources.get_distribution("Mopidy-ALSAMixer").version
+__version__ = version("mopidy-alsamixer")
 
 
 class Extension(ext.Extension):
-    dist_name = "Mopidy-ALSAMixer"
+    dist_name = "mopidy-alsamixer"
     ext_name = "alsamixer"
     version = __version__
 
@@ -22,12 +21,10 @@ class Extension(ext.Extension):
         schema["control"] = config.String()
         schema["min_volume"] = config.Integer(minimum=0, maximum=100)
         schema["max_volume"] = config.Integer(minimum=0, maximum=100)
-        schema["volume_scale"] = config.String(
-            choices=("linear", "cubic", "log")
-        )
+        schema["volume_scale"] = config.String(choices=("linear", "cubic", "log"))
         return schema
 
     def setup(self, registry):
-        from mopidy_alsamixer.mixer import AlsaMixer
+        from mopidy_alsamixer.mixer import AlsaMixer  # noqa: PLC0415
 
         registry.add("mixer", AlsaMixer)
