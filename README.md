@@ -9,10 +9,10 @@
 
 ## Maintainer wanted
 
-Mopidy-SoundCloud is currently kept on life support by the Mopidy core
+mopidy-alsamixer is currently kept on life support by the Mopidy core
 developers. It is in need of a more dedicated maintainer.
 
-If you want to be the maintainer of Mopidy-SoundCloud, please:
+If you want to be the maintainer of mopidy-alsamixer, please:
 
 1.  Make 2-3 good pull requests improving any part of the project.
 
