@@ -1,5 +1,6 @@
 import copy
 import unittest
+from typing import Any, ClassVar
 from unittest import mock
 
 import alsaaudio
@@ -15,7 +16,7 @@ from mopidy_alsamixer.mixer import AlsaMixer
     ALSAAudioError=alsaaudio.ALSAAudioError,
 )
 class MixerTest(unittest.TestCase):
-    default_config = {
+    default_config: ClassVar[dict[str, dict[str, Any]]] = {
         "alsamixer": {
             "device": "default",
             "card": None,
@@ -26,7 +27,7 @@ class MixerTest(unittest.TestCase):
         }
     }
 
-    def get_mixer(self, alsa_mock=None, config=None, apply_default_config=True):
+    def get_mixer(self, alsa_mock=None, *, config=None, apply_default_config=True):
         if config is None:
             config = {"alsamixer": {"device": "default", "control": "Master"}}
         if alsa_mock is not None:
@@ -319,4 +320,4 @@ class MixerTest(unittest.TestCase):
         mixer_mock.getvolume.assert_called_once_with()
         mixer_mock.getmute.assert_called_once_with()
         mixer.trigger_volume_changed.assert_called_once_with(75)
-        mixer.trigger_mute_changed.assert_called_once_with(True)
+        mixer.trigger_mute_changed.assert_called_once_with(True)  # noqa: FBT003

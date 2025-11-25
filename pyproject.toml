@@ -79,12 +79,16 @@ target-version = "py313"
 select = ["ALL"]
 ignore = [
     # Add rules you want to ignore here
-    "D",     # pydocstyle
-    "D203",  # one-blank-line-before-class
-    "D213",  # multi-line-summary-second-line
-    "G004",  # logging-f-string
-    "TD002", # missing-todo-author
-    "TD003", # missing-todo-link
+    "ANN001", # missing-type-function-argument  # TODO
+    "ANN201", # missing-return-type-undocumented-public-function  # TODO
+    "ANN202", # missing-return-type-private-function  # TODO
+    "ANN204", # missing-return-type-special-method  # TODO
+    "D",      # pydocstyle
+    "D203",   # one-blank-line-before-class
+    "D213",   # multi-line-summary-second-line
+    "G004",   # logging-f-string
+    "TD002",  # missing-todo-author
+    "TD003",  # missing-todo-link
     #
     # Conflicting with `ruff format`
     "COM812", # missing-trailing-comma
@@ -93,9 +97,10 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
-    "ARG",  # flake8-unused-arguments
-    "D",    # pydocstyle
-    "S101", # assert
+    "ARG",     # flake8-unused-arguments
+    "D",       # pydocstyle
+    "PLR2004", # magic-value-comparison  # TODO
+    "S101",    # assert
 ]
 
 

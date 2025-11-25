@@ -8,9 +8,9 @@ import gi
 import pykka
 
 gi.require_version("GstAudio", "1.0")
-from gi.repository import GstAudio  # noqa isort:skip
+from gi.repository import GstAudio  # noqa: E402, I001
 
-from mopidy import exceptions, mixer  # noqa isort:skip
+from mopidy import exceptions, mixer  # noqa: E402
 
 
 logger = logging.getLogger(__name__)
@@ -37,20 +37,22 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         known_cards = alsaaudio.cards()
         try:
             known_controls = alsaaudio.mixers(device=self.device)
-        except alsaaudio.ALSAAudioError:
-            raise exceptions.MixerError(
+        except alsaaudio.ALSAAudioError as exc:
+            msg = (
                 f"Could not find ALSA {self.device_title}. "
                 "Known soundcards include: "
                 f"{', '.join(known_cards)}"
             )
+            raise exceptions.MixerError(msg) from exc
 
         if self.control not in known_controls:
-            raise exceptions.MixerError(
+            msg = (
                 "Could not find ALSA mixer control "
                 f"{self.control} on {self.device_title}. "
                 f"Known mixers on {self.device_title} include: "
                 f"{', '.join(known_controls)}"
             )
+            raise exceptions.MixerError(msg)
 
         self._last_volume = None
         self._last_mute = None
@@ -150,10 +152,11 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     def set_mute(self, mute):
         try:
             self._mixer.setmute(int(mute))
-            return True
         except alsaaudio.ALSAAudioError as exc:
             logger.debug(f"Setting mute state failed: {exc}")
             return False
+        else:
+            return True
 
     def trigger_events_for_changed_values(self):
         old_volume, self._last_volume = self._last_volume, self.get_volume()
@@ -178,7 +181,9 @@ class AlsaMixerObserver(threading.Thread):
         self.mixer = alsaaudio.Mixer(device=device, control=control)
 
         descriptors = self.mixer.polldescriptors()
-        assert len(descriptors) == 1
+        if len(descriptors) != 1:
+            msg = "Expected exactly one poll descriptor"
+            raise AssertionError(msg)
         self.fd = descriptors[0][0]
         self.event_mask = descriptors[0][1]
 
