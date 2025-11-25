@@ -2,13 +2,15 @@ import logging
 import math
 import select
 import threading
+from typing import override
 
 import alsaaudio
 import gi
 import pykka
+from mopidy.types import Percentage
 
 gi.require_version("GstAudio", "1.0")
-from gi.repository import GstAudio  # noqa: E402, I001
+from gi.repository import GstAudio  # noqa: E402, I001  # pyright: ignore[reportAttributeAccessIssue]
 
 from mopidy import exceptions, mixer  # noqa: E402
 
@@ -78,7 +80,8 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             control=self.control,
         )
 
-    def get_volume(self):
+    @override
+    def get_volume(self) -> Percentage | None:
         channels = self._mixer.getvolume()
         if not channels:
             return None
@@ -87,11 +90,12 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         # Not all channels have the same volume
         return None
 
-    def set_volume(self, volume):
+    @override
+    def set_volume(self, volume: Percentage) -> bool:
         self._mixer.setvolume(self.volume_to_mixer_volume(volume))
         return True
 
-    def mixer_volume_to_volume(self, mixer_volume):
+    def mixer_volume_to_volume(self, mixer_volume) -> Percentage:
         volume = mixer_volume
         if self.volume_scale == "cubic":
             volume = (
@@ -112,7 +116,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         volume = (
             (volume - self.min_volume) * 100.0 / (self.max_volume - self.min_volume)
         )
-        return int(volume)
+        return Percentage(volume)
 
     def volume_to_mixer_volume(self, volume):
         mixer_volume = (
@@ -162,10 +166,10 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         old_volume, self._last_volume = self._last_volume, self.get_volume()
         old_mute, self._last_mute = self._last_mute, self.get_mute()
 
-        if old_volume != self._last_volume:
+        if self._last_volume is not None and self._last_volume != old_volume:
             self.trigger_volume_changed(self._last_volume)
 
-        if old_mute != self._last_mute:
+        if self._last_mute is not None and self._last_mute != old_mute:
             self.trigger_mute_changed(self._last_mute)
 
 
