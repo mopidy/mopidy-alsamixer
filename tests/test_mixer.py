@@ -3,8 +3,9 @@ import unittest
 from unittest import mock
 
 import alsaaudio
-
+import pytest
 from mopidy import exceptions
+
 from mopidy_alsamixer.mixer import AlsaMixer
 
 
@@ -46,7 +47,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(
             alsa_mock, config=actual_config, apply_default_config=False
         )
-        self.assertIs(mixer.config, actual_config)
+        assert mixer.config is actual_config
 
     def test_use_default_device_from_config(self, alsa_mock):
         alsa_mock.cards.return_value = ["PCH", "SB"]
@@ -83,11 +84,11 @@ class MixerTest(unittest.TestCase):
         )
         config = {"alsamixer": {"device": "PCH2", "control": "Master"}}
 
-        with self.assertRaises(exceptions.MixerError) as ex:
+        with pytest.raises(exceptions.MixerError) as ex:
             self.get_mixer(config=config)
 
-        self.assertIn("Could not find ALSA device", str(ex.exception))
-        self.assertIn("include: PCH, SB", str(ex.exception))
+        assert "Could not find ALSA device" in str(ex.exception)
+        assert "include: PCH, SB" in str(ex.exception)
 
         alsa_mock.mixers.assert_called_once_with(device="PCH2")
 
@@ -119,11 +120,11 @@ class MixerTest(unittest.TestCase):
         )
         config = {"alsamixer": {"card": 2, "control": "Master"}}
 
-        with self.assertRaises(exceptions.MixerError) as ex:
+        with pytest.raises(exceptions.MixerError) as ex:
             self.get_mixer(config=config)
 
-        self.assertIn("Could not find ALSA card", str(ex.exception))
-        self.assertIn("include: PCH, SB", str(ex.exception))
+        assert "Could not find ALSA card" in str(ex.exception)
+        assert "include: PCH, SB" in str(ex.exception)
 
         alsa_mock.mixers.assert_called_once_with(device="hw:2")
 
@@ -142,11 +143,11 @@ class MixerTest(unittest.TestCase):
         alsa_mock.mixers.return_value = ["Headphone", "Master"]
         config = {"alsamixer": {"device": "PCH", "control": "Speaker"}}
 
-        with self.assertRaises(exceptions.MixerError) as ex:
+        with pytest.raises(exceptions.MixerError) as ex:
             self.get_mixer(config=config)
 
-        self.assertIn("Could not find ALSA mixer control", str(ex.exception))
-        self.assertIn("include: Headphone, Master", str(ex.exception))
+        assert "Could not find ALSA mixer control" in str(ex.exception)
+        assert "include: Headphone, Master" in str(ex.exception)
 
     def test_get_volume(self, alsa_mock):
         config = {"alsamixer": {"volume_scale": "linear"}}
@@ -154,7 +155,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = [86]
 
-        self.assertEqual(mixer.get_volume(), 86)
+        assert mixer.get_volume() == 86
 
         mixer_mock.getvolume.assert_called_once_with()
 
@@ -164,7 +165,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = [86]
 
-        self.assertEqual(mixer.get_volume(), 63)
+        assert mixer.get_volume() == 63
 
         mixer_mock.getvolume.assert_called_once_with()
 
@@ -174,7 +175,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = [86]
 
-        self.assertEqual(mixer.get_volume(), 52)
+        assert mixer.get_volume() == 52
 
         mixer_mock.getvolume.assert_called_once_with()
 
@@ -183,7 +184,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = [86, 70]
 
-        self.assertIsNone(mixer.get_volume())
+        assert mixer.get_volume() is None
 
         mixer_mock.getvolume.assert_called_once_with()
 
@@ -192,7 +193,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getvolume.return_value = []
 
-        self.assertIsNone(mixer.get_volume())
+        assert mixer.get_volume() is None
 
         mixer_mock.getvolume.assert_called_once_with()
 
@@ -201,7 +202,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock, config=config)
         mixer_mock = alsa_mock.Mixer.return_value
 
-        self.assertTrue(mixer.set_volume(74))
+        assert mixer.set_volume(74)
 
         mixer_mock.setvolume.assert_called_once_with(74)
 
@@ -210,7 +211,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock, config=config)
         mixer_mock = alsa_mock.Mixer.return_value
 
-        self.assertTrue(mixer.set_volume(74))
+        assert mixer.set_volume(74)
 
         mixer_mock.setvolume.assert_called_once_with(90)
 
@@ -219,7 +220,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock, config=config)
         mixer_mock = alsa_mock.Mixer.return_value
 
-        self.assertTrue(mixer.set_volume(74))
+        assert mixer.set_volume(74)
 
         mixer_mock.setvolume.assert_called_once_with(93)
 
@@ -228,7 +229,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getmute.return_value = [1]
 
-        self.assertIs(mixer.get_mute(), True)
+        assert mixer.get_mute() is True
 
         mixer_mock.getmute.assert_called_once_with()
 
@@ -237,7 +238,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getmute.return_value = [0]
 
-        self.assertIs(mixer.get_mute(), False)
+        assert mixer.get_mute() is False
 
         mixer_mock.getmute.assert_called_once_with()
 
@@ -246,7 +247,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getmute.side_effect = alsa_mock.ALSAAudioError
 
-        self.assertIsNone(mixer.get_mute())
+        assert mixer.get_mute() is None
 
         mixer_mock.getmute.assert_called_once_with()
 
@@ -254,7 +255,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
 
-        self.assertTrue(mixer.set_mute(True))
+        assert mixer.set_mute(True)
 
         mixer_mock.setmute.assert_called_once_with(1)
 
@@ -263,7 +264,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.setmute.side_effect = alsa_mock.ALSAAudioError
 
-        self.assertFalse(mixer.set_mute(True))
+        assert not mixer.set_mute(True)
 
         mixer_mock.setmute.assert_called_once_with(1)
 
@@ -272,7 +273,7 @@ class MixerTest(unittest.TestCase):
         mixer_mock = alsa_mock.Mixer.return_value
         mixer_mock.getmute.return_value = [0, 1]
 
-        self.assertIs(mixer.get_mute(), None)
+        assert mixer.get_mute() is None
 
         mixer_mock.getmute.assert_called_once_with()
 
@@ -280,7 +281,7 @@ class MixerTest(unittest.TestCase):
         mixer = self.get_mixer(alsa_mock)
         mixer_mock = alsa_mock.Mixer.return_value
 
-        self.assertTrue(mixer.set_mute(False))
+        assert mixer.set_mute(False)
 
         mixer_mock.setmute.assert_called_once_with(0)
 
@@ -301,8 +302,8 @@ class MixerTest(unittest.TestCase):
 
         mixer_mock.getvolume.assert_called_once_with()
         mixer_mock.getmute.assert_called_once_with()
-        self.assertEqual(mixer.trigger_volume_changed.call_count, 0)
-        self.assertEqual(mixer.trigger_mute_changed.call_count, 0)
+        assert mixer.trigger_volume_changed.call_count == 0
+        assert mixer.trigger_mute_changed.call_count == 0
 
     def test_trigger_events_for_changed_values_when_changes(self, alsa_mock):
         mixer_mock = alsa_mock.Mixer.return_value

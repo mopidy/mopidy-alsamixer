@@ -8,17 +8,17 @@ def test_get_default_config():
 
     config = ext.get_default_config()
 
-    self.assertIn("[alsamixer]", config)
-    self.assertIn("enabled = true", config)
-    self.assertIn("device = default", config)
-    self.assertIn("card =", config)
-    self.assertIn("control = Master", config)
+    assert "[alsamixer]" in config
+    assert "enabled = true" in config
+    assert "device = default" in config
+    assert "card =" in config
+    assert "control = Master" in config
 
     schema = ext.get_config_schema()
 
-    self.assertIn("device", schema)
-    self.assertIn("card", schema)
-    self.assertIn("control", schema)
+    assert "device" in schema
+    assert "card" in schema
+    assert "control" in schema
 
 
 def test_setup():
