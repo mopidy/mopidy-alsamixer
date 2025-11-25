@@ -7,7 +7,7 @@ import alsaaudio
 import gi
 import pykka
 
-gi.require_version("GstAudio", "1.0")  # noqa
+gi.require_version("GstAudio", "1.0")
 from gi.repository import GstAudio  # noqa isort:skip
 
 from mopidy import exceptions, mixer  # noqa isort:skip
@@ -80,11 +80,10 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         channels = self._mixer.getvolume()
         if not channels:
             return None
-        elif channels.count(channels[0]) == len(channels):
+        if channels.count(channels[0]) == len(channels):
             return self.mixer_volume_to_volume(channels[0])
-        else:
-            # Not all channels have the same volume
-            return None
+        # Not all channels have the same volume
+        return None
 
     def set_volume(self, volume):
         self._mixer.setvolume(self.volume_to_mixer_volume(volume))
@@ -143,11 +142,10 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             return None
         if all(channels_muted):
             return True
-        elif not any(channels_muted):
+        if not any(channels_muted):
             return False
-        else:
-            # Not all channels have the same mute state
-            return None
+        # Not all channels have the same mute state
+        return None
 
     def set_mute(self, mute):
         try:
