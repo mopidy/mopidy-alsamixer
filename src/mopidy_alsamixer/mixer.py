@@ -56,8 +56,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self._last_mute = None
 
         logger.info(
-            f"Mixing using ALSA, {self.device_title}, "
-            f"mixer control {self.control!r}."
+            f"Mixing using ALSA, {self.device_title}, mixer control {self.control!r}."
         )
 
     def on_start(self):
@@ -110,16 +109,13 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             # self._mixer provides a percentage.
             volume = math.pow(10, volume / 50.0)
         volume = (
-            (volume - self.min_volume)
-            * 100.0
-            / (self.max_volume - self.min_volume)
+            (volume - self.min_volume) * 100.0 / (self.max_volume - self.min_volume)
         )
         return int(volume)
 
     def volume_to_mixer_volume(self, volume):
         mixer_volume = (
-            self.min_volume
-            + volume * (self.max_volume - self.min_volume) / 100.0
+            self.min_volume + volume * (self.max_volume - self.min_volume) / 100.0
         )
         if self.volume_scale == "cubic":
             mixer_volume = (
