@@ -31,10 +31,9 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         card = cast("int | None", self.config["alsamixer"]["card"])
         self.min_volume = cast("Percentage", self.config["alsamixer"]["min_volume"])
         self.max_volume = cast("Percentage", self.config["alsamixer"]["max_volume"])
-        self.volume_scale = cast(
-            "Literal['linear', 'cubic', 'log']",
-            self.config["alsamixer"]["volume_scale"],
-        )
+        self.volume_scale: Literal["linear", "cubic", "log"] = self.config["alsamixer"][
+            "volume_scale"
+        ]
 
         self.device_title = f"device {self.device!r}"
         if card is not None:
@@ -102,49 +101,59 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         return True
 
     def mixer_volume_to_volume(self, mixer_volume: Percentage) -> Percentage:
-        volume = mixer_volume
-        if self.volume_scale == "cubic":
-            volume = int(
-                GstAudio.StreamVolume.convert_volume(
-                    GstAudio.StreamVolumeFormat.CUBIC,
-                    GstAudio.StreamVolumeFormat.LINEAR,
-                    volume / 100.0,
+        match self.volume_scale:
+            case "cubic":
+                return Percentage(
+                    int(
+                        GstAudio.StreamVolume.convert_volume(
+                            GstAudio.StreamVolumeFormat.CUBIC,
+                            GstAudio.StreamVolumeFormat.LINEAR,
+                            mixer_volume / 100.0,
+                        )
+                        * 100.0
+                    )
                 )
-                * 100.0
-            )
-        elif self.volume_scale == "log":
-            # Uses our own formula rather than GstAudio.StreamVolume.
-            # convert_volume(GstAudio.StreamVolumeFormat.LINEAR,
-            # GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
-            # as the result is a DB value, which we can't work with as
-            # self._mixer provides a percentage.
-            volume = int(math.pow(10, volume / 50.0))
-        volume = int(
-            (volume - self.min_volume) * 100.0 / (self.max_volume - self.min_volume)
-        )
-        return Percentage(volume)
+            case "log":
+                # Uses our own formula rather than GstAudio.StreamVolume.
+                # convert_volume(GstAudio.StreamVolumeFormat.LINEAR,
+                # GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
+                # as the result is a DB value, which we can't work with as
+                # self._mixer provides a percentage.
+                return Percentage(int(math.pow(10, mixer_volume / 50.0)))
+            case "linear":
+                return Percentage(
+                    int(
+                        (mixer_volume - self.min_volume)
+                        * 100.0
+                        / (self.max_volume - self.min_volume)
+                    )
+                )
 
     def volume_to_mixer_volume(self, volume: Percentage) -> Percentage:
         mixer_volume = int(
             self.min_volume + volume * (self.max_volume - self.min_volume) / 100.0
         )
-        if self.volume_scale == "cubic":
-            mixer_volume = int(
-                GstAudio.StreamVolume.convert_volume(
-                    GstAudio.StreamVolumeFormat.LINEAR,
-                    GstAudio.StreamVolumeFormat.CUBIC,
-                    mixer_volume / 100.0,
+        match self.volume_scale:
+            case "cubic":
+                return Percentage(
+                    int(
+                        GstAudio.StreamVolume.convert_volume(
+                            GstAudio.StreamVolumeFormat.LINEAR,
+                            GstAudio.StreamVolumeFormat.CUBIC,
+                            mixer_volume / 100.0,
+                        )
+                        * 100.0
+                    )
                 )
-                * 100.0
-            )
-        elif self.volume_scale == "log":
-            # Uses our own formula rather than GstAudio.StreamVolume.
-            # convert_volume(GstAudio.StreamVolumeFormat.LINEAR,
-            # GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
-            # as the result is a DB value, which we can't work with as
-            # self._mixer wants a percentage.
-            mixer_volume = int(50 * math.log10(mixer_volume))
-        return Percentage(mixer_volume)
+            case "log":
+                # Uses our own formula rather than GstAudio.StreamVolume.
+                # convert_volume(GstAudio.StreamVolumeFormat.LINEAR,
+                # GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
+                # as the result is a DB value, which we can't work with as
+                # self._mixer wants a percentage.
+                return Percentage(int(50 * math.log10(mixer_volume)))
+            case "linear":
+                return Percentage(mixer_volume)
 
     @override
     def get_mute(self) -> bool | None:
