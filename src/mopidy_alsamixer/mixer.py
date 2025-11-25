@@ -2,7 +2,8 @@ import logging
 import math
 import select
 import threading
-from typing import override
+from collections.abc import Callable
+from typing import Literal, cast, override
 
 import alsaaudio
 import gi
@@ -21,15 +22,19 @@ logger = logging.getLogger(__name__)
 class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
     name = "alsamixer"
 
-    def __init__(self, config):
-        super().__init__()
+    @override
+    def __init__(self, config: dict) -> None:
+        super().__init__(config)
         self.config = config
-        self.control = self.config["alsamixer"]["control"]
-        self.device = self.config["alsamixer"]["device"]
-        card = self.config["alsamixer"]["card"]
-        self.min_volume = self.config["alsamixer"]["min_volume"]
-        self.max_volume = self.config["alsamixer"]["max_volume"]
-        self.volume_scale = self.config["alsamixer"]["volume_scale"]
+        self.control = cast("str", self.config["alsamixer"]["control"])
+        self.device = cast("str", self.config["alsamixer"]["device"])
+        card = cast("int | None", self.config["alsamixer"]["card"])
+        self.min_volume = cast("Percentage", self.config["alsamixer"]["min_volume"])
+        self.max_volume = cast("Percentage", self.config["alsamixer"]["max_volume"])
+        self.volume_scale = cast(
+            "Literal['linear', 'cubic', 'log']",
+            self.config["alsamixer"]["volume_scale"],
+        )
 
         self.device_title = f"device {self.device!r}"
         if card is not None:
@@ -63,7 +68,8 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             f"Mixing using ALSA, {self.device_title}, mixer control {self.control!r}."
         )
 
-    def on_start(self):
+    @override
+    def on_start(self) -> None:
         self._observer = AlsaMixerObserver(
             device=self.device,
             control=self.control,
@@ -72,7 +78,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self._observer.start()
 
     @property
-    def _mixer(self):
+    def _mixer(self) -> alsaaudio.Mixer:
         # The mixer must be recreated every time it is used to be able to
         # observe volume/mute changes done by other applications.
         return alsaaudio.Mixer(
@@ -95,10 +101,10 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         self._mixer.setvolume(self.volume_to_mixer_volume(volume))
         return True
 
-    def mixer_volume_to_volume(self, mixer_volume) -> Percentage:
+    def mixer_volume_to_volume(self, mixer_volume: Percentage) -> Percentage:
         volume = mixer_volume
         if self.volume_scale == "cubic":
-            volume = (
+            volume = int(
                 GstAudio.StreamVolume.convert_volume(
                     GstAudio.StreamVolumeFormat.CUBIC,
                     GstAudio.StreamVolumeFormat.LINEAR,
@@ -112,18 +118,18 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             # GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
             # as the result is a DB value, which we can't work with as
             # self._mixer provides a percentage.
-            volume = math.pow(10, volume / 50.0)
-        volume = (
+            volume = int(math.pow(10, volume / 50.0))
+        volume = int(
             (volume - self.min_volume) * 100.0 / (self.max_volume - self.min_volume)
         )
         return Percentage(volume)
 
-    def volume_to_mixer_volume(self, volume):
-        mixer_volume = (
+    def volume_to_mixer_volume(self, volume: Percentage) -> Percentage:
+        mixer_volume = int(
             self.min_volume + volume * (self.max_volume - self.min_volume) / 100.0
         )
         if self.volume_scale == "cubic":
-            mixer_volume = (
+            mixer_volume = int(
                 GstAudio.StreamVolume.convert_volume(
                     GstAudio.StreamVolumeFormat.LINEAR,
                     GstAudio.StreamVolumeFormat.CUBIC,
@@ -137,10 +143,11 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
             # GstAudio.StreamVolumeFormat.DB, mixer_volume / 100.0)
             # as the result is a DB value, which we can't work with as
             # self._mixer wants a percentage.
-            mixer_volume = 50 * math.log10(mixer_volume)
-        return int(mixer_volume)
+            mixer_volume = int(50 * math.log10(mixer_volume))
+        return Percentage(mixer_volume)
 
-    def get_mute(self):
+    @override
+    def get_mute(self) -> bool | None:
         try:
             channels_muted = self._mixer.getmute()
         except alsaaudio.ALSAAudioError as exc:
@@ -153,7 +160,8 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         # Not all channels have the same mute state
         return None
 
-    def set_mute(self, mute):
+    @override
+    def set_mute(self, mute: bool) -> bool:
         try:
             self._mixer.setmute(int(mute))
         except alsaaudio.ALSAAudioError as exc:
@@ -162,7 +170,7 @@ class AlsaMixer(pykka.ThreadingActor, mixer.Mixer):
         else:
             return True
 
-    def trigger_events_for_changed_values(self):
+    def trigger_events_for_changed_values(self) -> None:
         old_volume, self._last_volume = self._last_volume, self.get_volume()
         old_mute, self._last_mute = self._last_mute, self.get_mute()
 
@@ -177,7 +185,12 @@ class AlsaMixerObserver(threading.Thread):
     daemon = True
     name = "AlsaMixerObserver"
 
-    def __init__(self, device, control, callback=None):
+    def __init__(
+        self,
+        device: str,
+        control: str,
+        callback: Callable[[], None] | None = None,
+    ) -> None:
         super().__init__()
         self.running = True
 
@@ -193,10 +206,10 @@ class AlsaMixerObserver(threading.Thread):
 
         self.callback = callback
 
-    def stop(self):
+    def stop(self) -> None:
         self.running = False
 
-    def run(self):
+    def run(self) -> None:
         poller = select.epoll()
         poller.register(self.fd, self.event_mask | select.EPOLLET)
         while self.running:
