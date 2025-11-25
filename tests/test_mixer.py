@@ -84,11 +84,11 @@ class MixerTest(unittest.TestCase):
         )
         config = {"alsamixer": {"device": "PCH2", "control": "Master"}}
 
-        with pytest.raises(exceptions.MixerError) as ex:
+        with pytest.raises(exceptions.MixerError) as exc_info:
             self.get_mixer(config=config)
 
-        assert "Could not find ALSA device" in str(ex.exception)
-        assert "include: PCH, SB" in str(ex.exception)
+        assert "Could not find ALSA device" in str(exc_info.value)
+        assert "include: PCH, SB" in str(exc_info.value)
 
         alsa_mock.mixers.assert_called_once_with(device="PCH2")
 
@@ -120,11 +120,11 @@ class MixerTest(unittest.TestCase):
         )
         config = {"alsamixer": {"card": 2, "control": "Master"}}
 
-        with pytest.raises(exceptions.MixerError) as ex:
+        with pytest.raises(exceptions.MixerError) as exc_info:
             self.get_mixer(config=config)
 
-        assert "Could not find ALSA card" in str(ex.exception)
-        assert "include: PCH, SB" in str(ex.exception)
+        assert "Could not find ALSA card" in str(exc_info.value)
+        assert "include: PCH, SB" in str(exc_info.value)
 
         alsa_mock.mixers.assert_called_once_with(device="hw:2")
 
@@ -143,11 +143,11 @@ class MixerTest(unittest.TestCase):
         alsa_mock.mixers.return_value = ["Headphone", "Master"]
         config = {"alsamixer": {"device": "PCH", "control": "Speaker"}}
 
-        with pytest.raises(exceptions.MixerError) as ex:
+        with pytest.raises(exceptions.MixerError) as exc_info:
             self.get_mixer(config=config)
 
-        assert "Could not find ALSA mixer control" in str(ex.exception)
-        assert "include: Headphone, Master" in str(ex.exception)
+        assert "Could not find ALSA mixer control" in str(exc_info.value)
+        assert "include: Headphone, Master" in str(exc_info.value)
 
     def test_get_volume(self, alsa_mock):
         config = {"alsamixer": {"volume_scale": "linear"}}
