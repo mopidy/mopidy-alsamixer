@@ -14,8 +14,8 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "mopidy >= 4.0.0a7",
-    "pyalsaaudio >= 0.11",
+    "mopidy >= 4.0.0",
+    "pyalsaaudio >= 0.10",
     "pygobject >= 3.50",
     "pykka >= 4.1",
 ]
